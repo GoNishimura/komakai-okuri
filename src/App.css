@@ -37,11 +37,25 @@
   }
 }
 
-.timeline {
-  position: relative;
-  width: 600px;
-  height: 50px;
-  background-color: #f0f0f0;
-  margin-top: 20px;
-  border: 1px solid #ccc;
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 5px;
+}
+
+.timeline-header-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px 0;
+}
+
+.timeline-body {
+  display: flex;
+  flex-direction: column;
+  /* 既存のスタイル */
 }

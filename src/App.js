@@ -8,7 +8,7 @@ const App = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [frameTimes, setFrameTimes] = useState({
-    23.97: [],
+    23.99: [],
     24: [],
     30: [],
   });
@@ -19,51 +19,52 @@ const App = () => {
 
   const handleTimeUpdate = useCallback((time) => {
     setCurrentTime(time);
-    console.log('currentTime:', time);
   }, []);
+
+  const calculateFrameTimes = (frameRate, duration) => {
+    const times = [];
+    const totalFrames = Math.floor(duration * frameRate);
+    for (let i = 0; i <= totalFrames; i++) {
+      times.push(i / frameRate);
+    }
+    return times;
+  };
 
   const handleLoadedMetadata = useCallback((duration) => {
     setTotalDuration(duration);
-    console.log('duration:', duration);
-
-    const calculateFrameTimes = (frameRate) => {
-      const times = [];
-      const totalFrames = Math.floor(duration * frameRate);
-      for (let i = 0; i <= totalFrames; i++) {
-        times.push((i / frameRate));
-      }
-      return times;
-    };
-
     setFrameTimes({
-      23.97: calculateFrameTimes(23.97),
-      24: calculateFrameTimes(24),
-      30: calculateFrameTimes(30),
+      23.99: calculateFrameTimes(23.99, duration),
+      24: calculateFrameTimes(24, duration),
+      30: calculateFrameTimes(30, duration),
     });
   }, []);
 
   const handleFrameOkuri = (frameRate, direction) => {
     const times = frameTimes[frameRate];
     let nextTime;
-  
+
     if (direction === 'forward') {
-      // currentTimeに最も近い時間を探す
       const nearestTrueTime = times.reduce((prev, curr) => 
         Math.abs(curr - currentTime) < Math.abs(prev - currentTime) ? curr : prev
       );
-  
-      // nearestTrueTimeの次の時間を探す
       const nearestTrueTimeIndex = times.indexOf(nearestTrueTime);
       nextTime = times[nearestTrueTimeIndex + 1];
     } else if (direction === 'backward') {
       nextTime = [...times].reverse().find(time => time < currentTime);
     }
-    console.log('times:', times, 'currentTime:', currentTime, 'nextTime:', nextTime);
-  
+
     if (nextTime !== undefined) {
       const video = document.querySelector('video');
       video.currentTime = nextTime;
     }
+  };
+
+  const handleFrameRateChange = (updatedFrameRates) => {
+    const newFrameTimes = updatedFrameRates.reduce((acc, frameRate) => {
+      acc[frameRate] = calculateFrameTimes(frameRate, totalDuration);
+      return acc;
+    }, {});
+    setFrameTimes(newFrameTimes);
   };
 
   return (
@@ -79,8 +80,9 @@ const App = () => {
           <Timeline 
             duration={totalDuration} 
             currentTime={currentTime} 
-            onFrameOkuri={handleFrameOkuri} 
             frameTimes={frameTimes} 
+            onFrameOkuri={handleFrameOkuri}
+            onFrameRateChange={handleFrameRateChange} 
           />
         </div>
       )}
