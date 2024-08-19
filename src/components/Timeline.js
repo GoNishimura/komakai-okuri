@@ -64,16 +64,6 @@ function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRate
                     flex-direction: column;
                     width: 100%;
                 }
-                .timeline-header {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 10px;
-                }
-                .timeline-body {
-                    display: flex;
-                    flex-direction: column;
-                    position: relative;
-                }
                 .timeline-row {
                     position: relative;
                     margin-bottom: 5px;

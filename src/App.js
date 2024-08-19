@@ -96,7 +96,7 @@ const App = () => {
             onLoadedMetadata={handleLoadedMetadata} 
             videoRef={videoRef} 
           />
-          <div className="timeline-header">
+          <div className="player-supporter">
             <div>{currentTime.toFixed(3)} 秒</div>
             <button onClick={handleSaveFrame}>このコマを保存</button>
           </div>
@@ -109,6 +109,13 @@ const App = () => {
           />
         </div>
       )}
+      <style jsx="true">{`
+        .player-supporter {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+      `}</style>
     </div>
   );
 };
