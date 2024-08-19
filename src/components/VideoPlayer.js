@@ -4,21 +4,23 @@ const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata }) => {
     const videoRef = useRef(null);
 
     useEffect(() => {
-        if (videoRef.current) {
+        const videoElement = videoRef.current;
+
+        if (videoElement) {
             const handleTimeUpdate = () => {
-                onTimeUpdate(videoRef.current.currentTime);
+                onTimeUpdate(videoElement.currentTime);
             };
 
             const handleLoadedMetadata = () => {
-                onLoadedMetadata(videoRef.current.duration);
+                onLoadedMetadata(videoElement.duration);
             };
 
-            videoRef.current.addEventListener('timeupdate', handleTimeUpdate);
-            videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
+            videoElement.addEventListener('timeupdate', handleTimeUpdate);
+            videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
 
             return () => {
-                videoRef.current.removeEventListener('timeupdate', handleTimeUpdate);
-                videoRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
+                videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+                videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
             };
         }
     }, [onTimeUpdate, onLoadedMetadata]);
