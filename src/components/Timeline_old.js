@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRateChange }) {
+function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRateChange, onSaveFrame }) {
     const [frameRates, setFrameRates] = useState([23.99, 24, 30]);
 
     const handleFrameRateChange = (index, newFrameRate) => {
@@ -20,21 +20,11 @@ function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRate
         return (time * frameRate).toFixed(3);
     };
 
-    const handleClickOnFrame = (e, frameRate) => {
-        const timelineRowBody = e.currentTarget;
-        const clickPosition = e.clientX - timelineRowBody.getBoundingClientRect().left;
-        const clickTime = (clickPosition / timelineRowBody.offsetWidth) * duration;
-        const nearestPreviousTime = frameTimes[frameRate][Math.floor(calculateFrameNumber(clickTime, frameRate))];
-        const video = document.querySelector('video');
-        if (video) {
-            video.currentTime = nearestPreviousTime;
-        }
-    };
-
     return (
         <div className="timeline-container">
             <div className="timeline-header">
                 <div>{formatTime(currentTime)} 秒</div>
+                <button onClick={onSaveFrame}>このコマを保存</button>
             </div>
             <div className="timeline-body">
                 {frameRates.map((frameRate, index) => (
@@ -50,10 +40,7 @@ function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRate
                             <button onClick={() => onFrameOkuri(frameRate, 'forward')}>→</button>
                             <span>{calculateFrameNumber(currentTime, frameRate)} コマ目</span>
                         </div>
-                        <div 
-                            className="timeline-row-body" 
-                            onClick={(e) => handleClickOnFrame(e, frameRate)}
-                        >
+                        <div className="timeline-row-body">
                             {frameTimes[frameRate] && frameTimes[frameRate].map((time, i) => (
                                 <div
                                     key={i}
@@ -97,14 +84,13 @@ function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRate
                         position: relative;
                         height: 20px;
                         background-color: #ddd;
-                        cursor: pointer;
                     }
                     .frame-tick {
                         position: absolute;
                         top: 0;
                         bottom: 0;
                         width: 1px;
-                        background-color: #000;
+                        background-color: black;
                     }
                     .current-time-indicator {
                         position: absolute;

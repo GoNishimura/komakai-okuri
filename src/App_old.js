@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import VideoUploader from './components/VideoUploader';
 import VideoPlayer from './components/VideoPlayer';
 import Timeline from './components/Timeline';
@@ -12,6 +12,8 @@ const App = () => {
     24: [],
     30: [],
   });
+
+  const videoRef = useRef(null);
 
   const handleFileUpload = (file) => {
     setVideoFile(file);
@@ -67,6 +69,22 @@ const App = () => {
     setFrameTimes(newFrameTimes);
   };
 
+  const handleSaveFrame = () => {
+    const videoElement = videoRef.current;
+    if (videoElement) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      const dataURL = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = `frame_${currentTime.toFixed(3)}s.png`;
+      link.click();
+    }
+  };
+
   return (
     <div>
       <VideoUploader onVideoUpload={handleFileUpload} />
@@ -75,7 +93,8 @@ const App = () => {
           <VideoPlayer 
             videoFile={videoFile} 
             onTimeUpdate={handleTimeUpdate} 
-            onLoadedMetadata={handleLoadedMetadata} 
+            onLoadedMetadata={handleLoadedMetadata}
+            videoRef={videoRef} 
           />
           <Timeline 
             duration={totalDuration} 
@@ -83,6 +102,7 @@ const App = () => {
             frameTimes={frameTimes} 
             onFrameOkuri={handleFrameOkuri}
             onFrameRateChange={handleFrameRateChange} 
+            onSaveFrame={handleSaveFrame}
           />
         </div>
       )}

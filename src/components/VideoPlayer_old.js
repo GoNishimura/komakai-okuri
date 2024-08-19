@@ -1,27 +1,30 @@
 import React, { useEffect, useRef } from 'react';
 
-const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata }) => {
-    const videoRef = useRef(null);
+const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata, videoRef }) => {
 
     useEffect(() => {
-        if (videoRef.current) {
+        const videoElement = videoRef.current;
+
+        if (videoElement) {
+            videoElement.muted = true;
+
             const handleTimeUpdate = () => {
-                onTimeUpdate(videoRef.current.currentTime);
+                onTimeUpdate(videoElement.currentTime);
             };
 
             const handleLoadedMetadata = () => {
-                onLoadedMetadata(videoRef.current.duration);
+                onLoadedMetadata(videoElement.duration);
             };
 
-            videoRef.current.addEventListener('timeupdate', handleTimeUpdate);
-            videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
+            videoElement.addEventListener('timeupdate', handleTimeUpdate);
+            videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
 
             return () => {
-                videoRef.current.removeEventListener('timeupdate', handleTimeUpdate);
-                videoRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
+                videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+                videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
             };
         }
-    }, [onTimeUpdate, onLoadedMetadata]);
+    }, [onTimeUpdate, onLoadedMetadata, videoRef]);
 
     return (
         <div className="video-player-container">
@@ -32,13 +35,13 @@ const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata }) => {
 
             <style jsx="true">{`
                 .video-player-container {
-                    max-width: 100%; /* 横幅を100%に制限 */
+                    max-width: 100%; 
                     display: flex;
                     justify-content: center;
                 }
                 video {
                     max-width: 100%;
-                    max-height: 80vh; /* 縦幅を画面の80%に制限 */
+                    max-height: 80vh;
                     width: auto;
                     height: auto;
                 }
