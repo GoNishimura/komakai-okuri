@@ -7,6 +7,9 @@ const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata }) => {
         const videoElement = videoRef.current;
 
         if (videoElement) {
+            // 動画プレイヤーを初期値でミュートに設定
+            videoElement.muted = true;
+
             const handleTimeUpdate = () => {
                 onTimeUpdate(videoElement.currentTime);
             };
