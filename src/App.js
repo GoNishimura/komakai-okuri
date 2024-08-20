@@ -27,7 +27,7 @@ const App = () => {
         const times = [];
         const totalFrames = Math.floor(duration * frameRate);
         for (let i = 0; i <= totalFrames; i++) {
-        times.push(i / frameRate);
+            times.push(i / frameRate);
         }
         return times;
     };
@@ -35,9 +35,9 @@ const App = () => {
     const handleLoadedMetadata = useCallback((duration) => {
         setTotalDuration(duration);
         setFrameTimes({
-        23.99: calculateFrameTimes(23.99, duration),
-        24: calculateFrameTimes(24, duration),
-        30: calculateFrameTimes(30, duration),
+            23.99: calculateFrameTimes(23.99, duration),
+            24: calculateFrameTimes(24, duration),
+            30: calculateFrameTimes(30, duration),
         });
     }, []);
 
@@ -46,13 +46,13 @@ const App = () => {
         let nextTime;
 
         if (direction === 'forward') {
-        const nearestTrueTime = times.reduce((prev, curr) => 
-            Math.abs(curr - currentTime) < Math.abs(prev - currentTime) ? curr : prev
-        );
-        const nearestTrueTimeIndex = times.indexOf(nearestTrueTime);
-        nextTime = times[nearestTrueTimeIndex + 1];
+            const nearestTrueTime = times.reduce((prev, curr) => 
+                Math.abs(curr - currentTime) < Math.abs(prev - currentTime) ? curr : prev
+            );
+            const nearestTrueTimeIndex = times.indexOf(nearestTrueTime);
+            nextTime = times[nearestTrueTimeIndex + 1];
         } else if (direction === 'backward') {
-        nextTime = [...times].reverse().find(time => time < currentTime);
+            nextTime = [...times].reverse().find(time => time < currentTime);
         }
 
         if (nextTime !== undefined) {
@@ -63,8 +63,8 @@ const App = () => {
 
     const handleFrameRateChange = (updatedFrameRates) => {
         const newFrameTimes = updatedFrameRates.reduce((acc, frameRate) => {
-        acc[frameRate] = calculateFrameTimes(frameRate, totalDuration);
-        return acc;
+            acc[frameRate] = calculateFrameTimes(frameRate, totalDuration);
+            return acc;
         }, {});
         setFrameTimes(newFrameTimes);
     };
@@ -72,16 +72,16 @@ const App = () => {
     const handleSaveFrame = () => {
         const videoElement = videoRef.current;
         if (videoElement) {
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        const dataURL = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.href = dataURL;
-        link.download = `frame_${currentTime.toFixed(3)}s.png`;
-        link.click();
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = `frame_${currentTime.toFixed(3)}s.png`;
+            link.click();
         }
     };
 
