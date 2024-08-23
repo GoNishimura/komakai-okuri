@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRateChange }) {
     const [frameRates, setFrameRates] = useState([23.99, 24, 30]);
+
+    useEffect(() => {
+        console.log('useEffect @ timeline.js frameTimes:', frameTimes)
+        const newFrameRates = Object.keys(frameTimes)
+        if (JSON.stringify(frameRates) !== JSON.stringify(newFrameRates)) {
+            console.log('updating framerates @ timeline.js frameRates:', frameRates, 'newFrameRates:', newFrameRates)
+            setFrameRates(newFrameRates)
+        }
+    }, [frameTimes])
 
     const handleFrameRateChange = (index, newFrameRate) => {
         const updatedFrameRates = [...frameRates];

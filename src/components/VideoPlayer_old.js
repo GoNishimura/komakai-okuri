@@ -4,8 +4,10 @@ const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata, videoRef }) =>
 
     useEffect(() => {
         const videoElement = videoRef.current;
+        console.log('useEffect @ videoplayer videoElement:', videoElement)
 
         if (videoElement) {
+            console.log('useEffect @ videoplayer working videoElement.duration:', videoElement.duration)
             videoElement.muted = true;
 
             const handleTimeUpdate = () => {
@@ -13,6 +15,7 @@ const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata, videoRef }) =>
             };
 
             const handleLoadedMetadata = () => {
+                console.log('handleLoadedMetadata @ videoplayer')
                 onLoadedMetadata(videoElement.duration);
             };
 
@@ -24,7 +27,7 @@ const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata, videoRef }) =>
                 videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
             };
         }
-    }, [onTimeUpdate, onLoadedMetadata, videoRef]);
+    }, [videoFile, onTimeUpdate, onLoadedMetadata, videoRef]);
 
     return (
         <div className="video-player-container">
@@ -35,7 +38,7 @@ const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata, videoRef }) =>
 
             <style jsx="true">{`
                 .video-player-container {
-                    max-width: 100%; 
+                    max-width: 100%;
                     display: flex;
                     justify-content: center;
                 }

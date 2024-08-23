@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import VideoUploader from './components/VideoUploader';
 import VideoPlayer from './components/VideoPlayer';
 import Timeline from './components/Timeline';
@@ -33,6 +33,7 @@ const App = () => {
     };
 
     const handleLoadedMetadata = useCallback((duration) => {
+        console.log('handleLoadedMetadata @ app duration:', duration)
         setTotalDuration(duration);
         setFrameTimes({
             23.99: calculateFrameTimes(23.99, duration),
@@ -56,8 +57,8 @@ const App = () => {
         }
 
         if (nextTime !== undefined) {
-        const video = document.querySelector('video');
-        video.currentTime = nextTime;
+            const video = document.querySelector('video');
+            video.currentTime = nextTime;
         }
     };
 
@@ -85,37 +86,51 @@ const App = () => {
         }
     };
 
+    // 新しい動画ファイルの選択時に初期化する
+    useEffect(() => {
+        if (videoFile) {
+            setCurrentTime(0);
+            setTotalDuration(0);
+            setFrameTimes({
+                23.99: [],
+                24: [],
+                30: [],
+            });
+            videoRef.current.load(); // 新しい動画をロード
+        }
+    }, [videoFile]);
+
     return (
         <div>
-        <VideoUploader onVideoUpload={handleFileUpload} />
-        {videoFile && (
-            <div>
-            <VideoPlayer 
-                videoFile={videoFile} 
-                onTimeUpdate={handleTimeUpdate} 
-                onLoadedMetadata={handleLoadedMetadata} 
-                videoRef={videoRef} 
-            />
-            <div className="player-supporter">
-                <div>{currentTime.toFixed(3)} 秒</div>
-                <button onClick={handleSaveFrame}>このコマを保存</button>
-            </div>
-            <Timeline 
-                duration={totalDuration} 
-                currentTime={currentTime} 
-                frameTimes={frameTimes} 
-                onFrameOkuri={handleFrameOkuri}
-                onFrameRateChange={handleFrameRateChange} 
-            />
-            </div>
-        )}
-        <style jsx="true">{`
-            .player-supporter {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 10px;
-            }
-        `}</style>
+            <VideoUploader onVideoUpload={handleFileUpload} />
+            {videoFile && (
+                <div>
+                    <VideoPlayer 
+                        videoFile={videoFile} 
+                        onTimeUpdate={handleTimeUpdate} 
+                        onLoadedMetadata={handleLoadedMetadata} 
+                        videoRef={videoRef} 
+                    />
+                    <div className="player-supporter">
+                        <div>{currentTime.toFixed(3)} 秒</div>
+                        <button onClick={handleSaveFrame}>このコマを保存</button>
+                    </div>
+                    <Timeline 
+                        duration={totalDuration} 
+                        currentTime={currentTime} 
+                        frameTimes={frameTimes} 
+                        onFrameOkuri={handleFrameOkuri}
+                        onFrameRateChange={handleFrameRateChange} 
+                    />
+                </div>
+            )}
+            <style jsx="true">{`
+                .player-supporter {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                }
+            `}</style>
         </div>
     );
 };
