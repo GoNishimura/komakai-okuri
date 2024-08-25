@@ -17,8 +17,8 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
         onFrameRateChange(updatedFrameRates);
     };
 
-    const calculateFrameNumber = (time, frameRate) => {
-        return (time * frameRate).toFixed(3);
+    const calculateFrameNumber = (time, frameRate, startFrom1=false) => {
+        return (time * frameRate + startFrom1).toFixed(3);
     };
 
     const handleClickOnFrame = (e, frameRate) => {
@@ -47,7 +47,7 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
                         /> コマ/秒（FPS）
                         <button onClick={() => onFrameOkuri(tickRow.frameRate, 'backward')}>←</button>
                         <button onClick={() => onFrameOkuri(tickRow.frameRate, 'forward')}>→</button>
-                        <span>{calculateFrameNumber(currentTime, tickRow.frameRate)} コマ目</span>
+                        <span>{calculateFrameNumber(currentTime, tickRow.frameRate, true)} コマ目</span>
                     </div>
                     <div 
                         className="timeline-row-body" 
