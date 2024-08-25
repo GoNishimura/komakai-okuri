@@ -3,15 +3,12 @@ import VideoUploader from './components/VideoUploader';
 import VideoPlayer from './components/VideoPlayer';
 import Timeline from './components/Timeline';
 
-const App = () => {
+function App() {
     const [videoFile, setVideoFile] = useState(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [totalDuration, setTotalDuration] = useState(0);
-    const [tickRowsData, setTickRowsData] = useState([
-        { frameRate: 23.99, frameTimes: [] },
-        { frameRate: 24, frameTimes: [] },
-        { frameRate: 30, frameTimes: [] }
-    ]);
+    const [tickRowsData, setTickRowsData] = useState([]);
+    const [startOffset, setStartOffset] = useState(0.001);
 
     const videoRef = useRef(null);
 
@@ -23,39 +20,41 @@ const App = () => {
         setCurrentTime(time);
     }, []);
 
-    const calculateFrameTimes = (frameRate, duration) => {
-        const times = [];
-        const totalFrames = Math.floor(duration * frameRate);
-        for (let i = 0; i <= totalFrames; i++) {
-            times.push(i / frameRate);
+    const calculateFrameTimes = (frameRate, duration, offset=startOffset) => {
+        const frameTimes = [];
+        let time = offset;
+
+        while (time <= duration) {
+            frameTimes.push(time);
+            time += 1 / frameRate;
         }
-        return times;
+        
+        return frameTimes;
     };
 
-    const handleLoadedMetadata = useCallback((duration) => {
+    const handleLoadedMetadata = (duration) => {
         setTotalDuration(duration);
-        setTickRowsData((prevTickRows) =>
-            prevTickRows.map((tickRow) => ({
-                ...tickRow,
-                frameTimes: calculateFrameTimes(tickRow.frameRate, duration),
-            }))
-        );
-    }, []);
+        const newTickRowsData = tickRowsData.map((tickRow) => ({
+            ...tickRow,
+            frameTimes: calculateFrameTimes(tickRow.frameRate, duration),
+        }));
+        setTickRowsData(newTickRowsData)
+    };
 
     const handleFrameOkuri = (frameRate, direction) => {
         const times = tickRowsData.find(row => row.frameRate === frameRate).frameTimes;
         let nextTime;
-
+        
         if (direction === 'forward') {
             const nearestTrueTime = times.reduce((prev, curr) => 
                 Math.abs(curr - currentTime) < Math.abs(prev - currentTime) ? curr : prev
             );
             const nearestTrueTimeIndex = times.indexOf(nearestTrueTime);
-            nextTime = times[nearestTrueTimeIndex + 1];
+            nextTime = times[nearestTrueTimeIndex + (startOffset <= currentTime)];
         } else if (direction === 'backward') {
             nextTime = [...times].reverse().find(time => time < currentTime);
         }
-
+        
         if (nextTime !== undefined) {
             const video = document.querySelector('video');
             video.currentTime = nextTime;
@@ -63,9 +62,20 @@ const App = () => {
     };
 
     const handleFrameRateChange = (updatedFrameRates) => {
-        const newTickRowsData = updatedFrameRates.map((frameRate) => ({
-            frameRate,
-            frameTimes: calculateFrameTimes(frameRate, totalDuration),
+        const newTickRowsData = tickRowsData.map((tickRow, index) => ({
+            ...tickRow,
+            frameRate: updatedFrameRates[index],
+            frameTimes: calculateFrameTimes(tickRow.frameRate, totalDuration),
+        }));
+        setTickRowsData(newTickRowsData);
+    };
+
+    const handleStartOffsetChange = (e) => {
+        const newOffset = Math.max(0, parseFloat(e.target.value));
+        setStartOffset(newOffset);
+        const newTickRowsData = tickRowsData.map((tickRow) => ({
+            ...tickRow,
+            frameTimes: calculateFrameTimes(tickRow.frameRate, totalDuration, newOffset),
         }));
         setTickRowsData(newTickRowsData);
     };
@@ -113,14 +123,25 @@ const App = () => {
                     />
                     <div className="player-supporter">
                         <div>{currentTime.toFixed(3)} 秒</div>
+                        <label>
+                            コマ開始時点:
+                            <input
+                                type="number"
+                                value={startOffset}
+                                onChange={handleStartOffsetChange}
+                                step="0.001"
+                                min="0"
+                            />
+                        </label>
                         <button onClick={handleSaveFrame}>このコマを保存</button>
                     </div>
-                    <Timeline 
-                        duration={totalDuration} 
-                        currentTime={currentTime} 
-                        tickRowsData={tickRowsData} 
+                    <Timeline
+                        duration={totalDuration}
+                        currentTime={currentTime}
+                        tickRowsData={tickRowsData}
                         onFrameOkuri={handleFrameOkuri}
-                        onFrameRateChange={handleFrameRateChange} 
+                        onFrameRateChange={handleFrameRateChange}
+                        startOffset={startOffset}
                     />
                 </div>
             )}
@@ -133,6 +154,6 @@ const App = () => {
             `}</style>
         </div>
     );
-};
+}
 
 export default App;

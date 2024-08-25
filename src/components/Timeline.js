@@ -1,36 +1,24 @@
-import React, { useEffect, useState } from 'react';
-
-function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRateChange }) {
-    const [frameRates, setFrameRates] = useState(tickRowsData.map(row => row.frameRate));
-
-    useEffect(() => {
-        const newFrameRates = tickRowsData.map(row => row.frameRate);
-        if (JSON.stringify(frameRates) !== JSON.stringify(newFrameRates)) {
-            setFrameRates(newFrameRates);
-        }
-    }, [tickRowsData, frameRates]);
+function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRateChange, startOffset }) {
 
     const handleFrameRateChange = (index, newFrameRate) => {
-        const updatedFrameRates = [...frameRates];
+        const updatedFrameRates = tickRowsData.map(row => row.frameRate);
         updatedFrameRates[index] = parseFloat(newFrameRate);
-        setFrameRates(updatedFrameRates);
         onFrameRateChange(updatedFrameRates);
     };
 
-    const calculateFrameNumber = (time, frameRate, startFrom1=false) => {
-        return (time * frameRate + startFrom1).toFixed(3);
+    const calculateFrameNumber = (time, frameRate) => {
+        return ((time - startOffset) * frameRate + 1).toFixed(3);
     };
 
     const handleClickOnFrame = (e, frameRate) => {
         const timelineRowBody = e.currentTarget;
         const clickPosition = e.clientX - timelineRowBody.getBoundingClientRect().left;
         const clickTime = (clickPosition / timelineRowBody.offsetWidth) * duration;
-        const nearestPreviousTime = tickRowsData
-            .find(row => row.frameRate === frameRate)
-            .frameTimes[Math.floor(calculateFrameNumber(clickTime, frameRate))];
+        const tickRow = tickRowsData.find(tickRow => tickRow.frameRate === frameRate)
+        const nearestPreviousTime = [...tickRow.frameTimes].reverse().find(time => time <= clickTime)
         const video = document.querySelector('video');
         if (video) {
-            video.currentTime = nearestPreviousTime;
+            video.currentTime = nearestPreviousTime !== undefined ? nearestPreviousTime : clickTime;
         }
     };
 
@@ -47,7 +35,7 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
                         /> コマ/秒（FPS）
                         <button onClick={() => onFrameOkuri(tickRow.frameRate, 'backward')}>←</button>
                         <button onClick={() => onFrameOkuri(tickRow.frameRate, 'forward')}>→</button>
-                        <span>{calculateFrameNumber(currentTime, tickRow.frameRate, true)} コマ目</span>
+                        <span>{calculateFrameNumber(currentTime, tickRow.frameRate)} コマ目</span>
                     </div>
                     <div 
                         className="timeline-row-body" 
