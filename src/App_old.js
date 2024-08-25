@@ -136,7 +136,7 @@ function App() {
                                 style={{ width: '4em' }}
                                 />秒
                         </label>
-                        <div>{currentTime.toFixed(3)} 秒</div>
+                        <div>{currentTime.toFixed(3)} / {totalDuration.toFixed(3)}秒</div>
                         <button onClick={handleSaveFrame}>このコマを保存</button>
                     </div>
                     <Timeline
