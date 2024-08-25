@@ -53,6 +53,7 @@ function App() {
             nextTime = times[nearestTrueTimeIndex + (startOffset <= currentTime)];
         } else if (direction === 'backward') {
             nextTime = [...times].reverse().find(time => time < currentTime);
+            if (nextTime === undefined) nextTime = 0
         }
         
         if (nextTime !== undefined) {
