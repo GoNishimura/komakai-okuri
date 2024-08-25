@@ -39,6 +39,8 @@ function App() {
             frameTimes: calculateFrameTimes(tickRow.frameRate, duration),
         }));
         setTickRowsData(newTickRowsData)
+        const video = document.querySelector('video');
+        video.currentTime = startOffset
     };
 
     const handleFrameOkuri = (frameRate, direction) => {
@@ -123,7 +125,6 @@ function App() {
                         videoRef={videoRef} 
                     />
                     <div className="player-supporter">
-                        <div>{currentTime.toFixed(3)} 秒</div>
                         <label>
                             コマ開始時点:
                             <input
@@ -132,8 +133,10 @@ function App() {
                                 onChange={handleStartOffsetChange}
                                 step="0.001"
                                 min="0"
-                            />
+                                style={{ width: '4em' }}
+                                />秒
                         </label>
+                        <div>{currentTime.toFixed(3)} 秒</div>
                         <button onClick={handleSaveFrame}>このコマを保存</button>
                     </div>
                     <Timeline
