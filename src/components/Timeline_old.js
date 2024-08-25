@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
 
-function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRateChange }) {
-    const [frameRates, setFrameRates] = useState([23.99, 24, 30]);
+function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRateChange }) {
+    const [frameRates, setFrameRates] = useState(tickRowsData.map(row => row.frameRate));
 
     useEffect(() => {
-        console.log('useEffect @ timeline.js frameTimes:', frameTimes)
-        const newFrameRates = Object.keys(frameTimes)
+        const newFrameRates = tickRowsData.map(row => row.frameRate);
         if (JSON.stringify(frameRates) !== JSON.stringify(newFrameRates)) {
-            console.log('updating framerates @ timeline.js frameRates:', frameRates, 'newFrameRates:', newFrameRates)
-            setFrameRates(newFrameRates)
+            setFrameRates(newFrameRates);
         }
-    }, [frameTimes])
+    }, [tickRowsData, frameRates]);
 
     const handleFrameRateChange = (index, newFrameRate) => {
         const updatedFrameRates = [...frameRates];
@@ -27,7 +25,9 @@ function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRate
         const timelineRowBody = e.currentTarget;
         const clickPosition = e.clientX - timelineRowBody.getBoundingClientRect().left;
         const clickTime = (clickPosition / timelineRowBody.offsetWidth) * duration;
-        const nearestPreviousTime = frameTimes[frameRate][Math.floor(calculateFrameNumber(clickTime, frameRate))];
+        const nearestPreviousTime = tickRowsData
+            .find(row => row.frameRate === frameRate)
+            .frameTimes[Math.floor(calculateFrameNumber(clickTime, frameRate))];
         const video = document.querySelector('video');
         if (video) {
             video.currentTime = nearestPreviousTime;
@@ -36,24 +36,24 @@ function Timeline({ duration, currentTime, frameTimes, onFrameOkuri, onFrameRate
 
     return (
         <div className="timeline-container">
-            {frameRates.map((frameRate, index) => (
+            {tickRowsData.map((tickRow, index) => (
                 <div key={index} className="timeline-row">
                     <div className="timeline-row-header">
                         <input
                             type="number"
-                            value={frameRate}
+                            value={tickRow.frameRate}
                             onChange={(e) => handleFrameRateChange(index, e.target.value)}
                             style={{ width: '4em' }}
                         /> コマ/秒（FPS）
-                        <button onClick={() => onFrameOkuri(frameRate, 'backward')}>←</button>
-                        <button onClick={() => onFrameOkuri(frameRate, 'forward')}>→</button>
-                        <span>{calculateFrameNumber(currentTime, frameRate)} コマ目</span>
+                        <button onClick={() => onFrameOkuri(tickRow.frameRate, 'backward')}>←</button>
+                        <button onClick={() => onFrameOkuri(tickRow.frameRate, 'forward')}>→</button>
+                        <span>{calculateFrameNumber(currentTime, tickRow.frameRate)} コマ目</span>
                     </div>
                     <div 
                         className="timeline-row-body" 
-                        onClick={(e) => handleClickOnFrame(e, frameRate)}
+                        onClick={(e) => handleClickOnFrame(e, tickRow.frameRate)}
                     >
-                        {frameTimes[frameRate] && frameTimes[frameRate].map((time, i) => (
+                        {tickRow.frameTimes.map((time, i) => (
                             <div
                                 key={i}
                                 className="frame-tick"

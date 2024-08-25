@@ -7,11 +7,11 @@ const App = () => {
     const [videoFile, setVideoFile] = useState(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [totalDuration, setTotalDuration] = useState(0);
-    const [frameTimes, setFrameTimes] = useState({
-        23.99: [],
-        24: [],
-        30: [],
-    });
+    const [tickRowsData, setTickRowsData] = useState([
+        { frameRate: 23.99, frameTimes: [] },
+        { frameRate: 24, frameTimes: [] },
+        { frameRate: 30, frameTimes: [] }
+    ]);
 
     const videoRef = useRef(null);
 
@@ -33,17 +33,17 @@ const App = () => {
     };
 
     const handleLoadedMetadata = useCallback((duration) => {
-        console.log('handleLoadedMetadata @ app duration:', duration)
         setTotalDuration(duration);
-        setFrameTimes({
-            23.99: calculateFrameTimes(23.99, duration),
-            24: calculateFrameTimes(24, duration),
-            30: calculateFrameTimes(30, duration),
-        });
+        setTickRowsData((prevTickRows) =>
+            prevTickRows.map((tickRow) => ({
+                ...tickRow,
+                frameTimes: calculateFrameTimes(tickRow.frameRate, duration),
+            }))
+        );
     }, []);
 
     const handleFrameOkuri = (frameRate, direction) => {
-        const times = frameTimes[frameRate];
+        const times = tickRowsData.find(row => row.frameRate === frameRate).frameTimes;
         let nextTime;
 
         if (direction === 'forward') {
@@ -63,11 +63,11 @@ const App = () => {
     };
 
     const handleFrameRateChange = (updatedFrameRates) => {
-        const newFrameTimes = updatedFrameRates.reduce((acc, frameRate) => {
-            acc[frameRate] = calculateFrameTimes(frameRate, totalDuration);
-            return acc;
-        }, {});
-        setFrameTimes(newFrameTimes);
+        const newTickRowsData = updatedFrameRates.map((frameRate) => ({
+            frameRate,
+            frameTimes: calculateFrameTimes(frameRate, totalDuration),
+        }));
+        setTickRowsData(newTickRowsData);
     };
 
     const handleSaveFrame = () => {
@@ -91,11 +91,11 @@ const App = () => {
         if (videoFile) {
             setCurrentTime(0);
             setTotalDuration(0);
-            setFrameTimes({
-                23.99: [],
-                24: [],
-                30: [],
-            });
+            setTickRowsData([
+                { frameRate: 23.99, frameTimes: [] },
+                { frameRate: 24, frameTimes: [] },
+                { frameRate: 30, frameTimes: [] }
+            ]);
             videoRef.current.load(); // 新しい動画をロード
         }
     }, [videoFile]);
@@ -118,7 +118,7 @@ const App = () => {
                     <Timeline 
                         duration={totalDuration} 
                         currentTime={currentTime} 
-                        frameTimes={frameTimes} 
+                        tickRowsData={tickRowsData} 
                         onFrameOkuri={handleFrameOkuri}
                         onFrameRateChange={handleFrameRateChange} 
                     />
