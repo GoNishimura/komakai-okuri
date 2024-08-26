@@ -1,4 +1,4 @@
-function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRateChange, startOffset }) {
+function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRateChange, startOffset, bookmarkedFrames, onBookmarkToggle, onBookmarkFrameOkuri }) {
 
     const handleFrameRateChange = (index, newFrameRate) => {
         const updatedFrameRates = tickRowsData.map(row => row.frameRate);
@@ -14,16 +14,23 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
         const timelineRowBody = e.currentTarget;
         const clickPosition = e.clientX - timelineRowBody.getBoundingClientRect().left;
         const clickTime = (clickPosition / timelineRowBody.offsetWidth) * duration;
-        const tickRow = tickRowsData.find(tickRow => tickRow.frameRate === frameRate)
-        const nearestPreviousTime = [...tickRow.frameTimes].reverse().find(time => time <= clickTime)
+        const tickRow = tickRowsData.find(tickRow => tickRow.frameRate === frameRate);
+        const nearestPreviousTime = [...tickRow.frameTimes].reverse().find(time => time <= clickTime);
         const video = document.querySelector('video');
         if (video) {
             video.currentTime = nearestPreviousTime !== undefined ? nearestPreviousTime : clickTime;
         }
     };
 
+    const isFrameBookmarked = (time) => bookmarkedFrames.includes(time);
+
     return (
-        <div className="timeline-container">
+        <div className="timeline">
+            <div className="timeline-header">
+                <button onClick={onBookmarkToggle}>{isFrameBookmarked(currentTime) ? "枝折り解除" : "ここを枝折る"}</button>
+                <button onClick={() => onBookmarkFrameOkuri('backward')}>枝折り前コマ送り</button>
+                <button onClick={() => onBookmarkFrameOkuri('forward')}>枝折り次コマ送り</button>
+            </div>
             {tickRowsData.map((tickRow, index) => (
                 <div key={index} className="timeline-row">
                     <div className="timeline-row-header">
@@ -32,21 +39,24 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
                             value={tickRow.frameRate}
                             onChange={(e) => handleFrameRateChange(index, e.target.value)}
                             style={{ width: '4em' }}
-                        /> コマ/秒（FPS）
+                        />
+                        <span>コマ/秒（FPS）</span>
                         <button onClick={() => onFrameOkuri(tickRow.frameRate, 'backward')}>←</button>
                         <button onClick={() => onFrameOkuri(tickRow.frameRate, 'forward')}>→</button>
                         <span>{calculateFrameNumber(currentTime, tickRow.frameRate)} コマ目</span>
                     </div>
-                    <div 
-                        className="timeline-row-body" 
-                        onClick={(e) => handleClickOnFrame(e, tickRow.frameRate)}
-                    >
-                        {tickRow.frameTimes.map((time, i) => (
+                    <div className="timeline-row-body" onClick={(e) => handleClickOnFrame(e, tickRow.frameRate)}>
+                        {tickRow.frameTimes.map((time, frameIndex) => (
                             <div
-                                key={i}
-                                className="frame-tick"
-                                style={{ left: `${(time / duration) * 100}%` }}
-                            />
+                                key={frameIndex}
+                                className="tick"
+                                style={{
+                                    left: `${(time / duration) * 100}%`,
+                                    backgroundColor: isFrameBookmarked(time) ? 'green' : 'black',
+                                    width: isFrameBookmarked(time) ? '2px' : '1px'
+                                }}
+                            >
+                            </div>
                         ))}
                         <div
                             className="current-time-indicator"
@@ -76,12 +86,10 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
                     background-color: #ddd;
                     cursor: pointer;
                 }
-                .frame-tick {
+                .tick {
                     position: absolute;
                     top: 0;
                     bottom: 0;
-                    width: 1px;
-                    background-color: #000;
                 }
                 .current-time-indicator {
                     position: absolute;

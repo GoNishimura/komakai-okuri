@@ -9,6 +9,7 @@ function App() {
     const [totalDuration, setTotalDuration] = useState(0);
     const [tickRowsData, setTickRowsData] = useState([]);
     const [startOffset, setStartOffset] = useState(0.001);
+    const [bookmarkedFrames, setBookmarkedFrames] = useState([]);
 
     const videoRef = useRef(null);
 
@@ -38,9 +39,9 @@ function App() {
             ...tickRow,
             frameTimes: calculateFrameTimes(tickRow.frameRate, duration),
         }));
-        setTickRowsData(newTickRowsData)
+        setTickRowsData(newTickRowsData);
         const video = document.querySelector('video');
-        video.currentTime = startOffset
+        video.currentTime = startOffset;
     };
 
     const handleFrameOkuri = (frameRate, direction) => {
@@ -55,9 +56,41 @@ function App() {
             nextTime = times[nearestTrueTimeIndex + (startOffset <= currentTime)];
         } else if (direction === 'backward') {
             nextTime = [...times].reverse().find(time => time < currentTime);
-            if (nextTime === undefined) nextTime = 0
+            if (nextTime === undefined) nextTime = 0;
         }
         
+        if (nextTime !== undefined) {
+            const video = document.querySelector('video');
+            video.currentTime = nextTime;
+        }
+    };
+
+    const handleBookmarkToggle = () => {
+        const nearestFrameTime = [...tickRowsData[0].frameTimes].reverse().find(time => time <= currentTime)
+        
+        if (bookmarkedFrames.includes(nearestFrameTime)) {
+            setBookmarkedFrames(bookmarkedFrames.filter(time => time !== nearestFrameTime));
+        } else {
+            setBookmarkedFrames([...bookmarkedFrames, nearestFrameTime].sort());
+        }
+        console.log('new bookmarkedFrames:', bookmarkedFrames)
+    };
+
+    const handleBookmarkFrameOkuri = (direction) => {
+        if (bookmarkedFrames.length === 0) return;
+        let nextTime;
+
+        console.log('bookmarkedFrames:', bookmarkedFrames, 'currentTime:', currentTime)
+        if (direction === 'forward') {
+            const nearestTrueTime = bookmarkedFrames.reduce((prev, curr) => 
+                Math.abs(curr - currentTime) < Math.abs(prev - currentTime) ? curr : prev
+            );
+            const nearestTrueTimeIndex = bookmarkedFrames.indexOf(nearestTrueTime);
+            nextTime = bookmarkedFrames[nearestTrueTimeIndex + (startOffset <= currentTime)];
+        } else if (direction === 'backward') {
+            nextTime = [...bookmarkedFrames].reverse().find(time => time <= currentTime);
+        }
+
         if (nextTime !== undefined) {
             const video = document.querySelector('video');
             video.currentTime = nextTime;
@@ -109,6 +142,7 @@ function App() {
                 { frameRate: 24, frameTimes: [] },
                 { frameRate: 30, frameTimes: [] }
             ]);
+            setBookmarkedFrames([]); // 枝折りを初期化
             videoRef.current.load(); // 新しい動画をロード
         }
     }, [videoFile]);
@@ -146,6 +180,9 @@ function App() {
                         onFrameOkuri={handleFrameOkuri}
                         onFrameRateChange={handleFrameRateChange}
                         startOffset={startOffset}
+                        bookmarkedFrames={bookmarkedFrames}
+                        onBookmarkToggle={handleBookmarkToggle}
+                        onBookmarkFrameOkuri={handleBookmarkFrameOkuri}
                     />
                 </div>
             )}
