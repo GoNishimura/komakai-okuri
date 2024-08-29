@@ -2,6 +2,8 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import VideoUploader from './components/VideoUploader';
 import VideoPlayer from './components/VideoPlayer';
 import Timeline from './components/Timeline';
+import { time2FrameIndex } from './utils.js';
+
 
 function App() {
     const [videoFile, setVideoFile] = useState(null);
@@ -9,7 +11,6 @@ function App() {
     const [totalDuration, setTotalDuration] = useState(0);
     const [tickRowsData, setTickRowsData] = useState([]);
     const [startOffset, setStartOffset] = useState(0.001);
-    const [bookmarkedFrames, setBookmarkedFrames] = useState([]);
 
     const videoRef = useRef(null);
 
@@ -38,6 +39,7 @@ function App() {
         const newTickRowsData = tickRowsData.map((tickRow) => ({
             ...tickRow,
             frameTimes: calculateFrameTimes(tickRow.frameRate, duration),
+            bookmarkedFrames: [], // 新たに追加
         }));
         setTickRowsData(newTickRowsData);
         const video = document.querySelector('video');
@@ -48,47 +50,39 @@ function App() {
         const times = tickRowsData.find(row => row.frameRate === frameRate).frameTimes;
         let nextTime;
         
-        if (direction === 'forward') {
-            const nearestTrueTime = times.reduce((prev, curr) => 
-                Math.abs(curr - currentTime) < Math.abs(prev - currentTime) ? curr : prev
-            );
-            const nearestTrueTimeIndex = times.indexOf(nearestTrueTime);
-            nextTime = times[nearestTrueTimeIndex + (startOffset <= currentTime)];
-        } else if (direction === 'backward') {
-            nextTime = [...times].reverse().find(time => time < currentTime);
-            if (nextTime === undefined) nextTime = 0;
-        }
-        
-        if (nextTime !== undefined) {
-            const video = document.querySelector('video');
-            video.currentTime = nextTime;
-        }
+        const nextIndex = time2FrameIndex(currentTime, frameRate, startOffset) + (direction === 'forward' ? 1 : -1);
+        if (nextIndex >= times.length || nextIndex < 0) return;
+        nextTime = times[Math.max(nextIndex, 0)];
+        const video = document.querySelector('video');
+        video.currentTime = nextTime;
     };
 
-    const handleBookmarkToggle = () => {
-        const nearestFrameTime = [...tickRowsData[0].frameTimes].reverse().find(time => time <= currentTime)
-        
-        if (bookmarkedFrames.includes(nearestFrameTime)) {
-            setBookmarkedFrames(bookmarkedFrames.filter(time => time !== nearestFrameTime));
+    const handleBookmarkToggle = (tickRowIndex) => {
+        const newTickRowsData = [...tickRowsData];
+        const bookmarkedFrames = newTickRowsData[tickRowIndex].bookmarkedFrames;
+        const currentFrameIndex = time2FrameIndex(currentTime, tickRowsData[tickRowIndex].frameRate, startOffset);
+        if (currentFrameIndex < 0) return;
+
+        if (bookmarkedFrames.includes(currentFrameIndex)) {
+            newTickRowsData[tickRowIndex].bookmarkedFrames = bookmarkedFrames.filter(index => index !== currentFrameIndex);
         } else {
-            setBookmarkedFrames([...bookmarkedFrames, nearestFrameTime].sort());
+            newTickRowsData[tickRowIndex].bookmarkedFrames = [...bookmarkedFrames, currentFrameIndex].sort((a, b) => a - b);
         }
-        console.log('new bookmarkedFrames:', bookmarkedFrames)
+        setTickRowsData(newTickRowsData);
     };
 
-    const handleBookmarkFrameOkuri = (direction) => {
-        if (bookmarkedFrames.length === 0) return;
+    const handleBookmarkFrameOkuri = (tickRowIndex, direction) => {
+        const tickRow = tickRowsData[tickRowIndex];
+        if (tickRow.bookmarkedFrames.length === 0) return;
         let nextTime;
 
-        console.log('bookmarkedFrames:', bookmarkedFrames, 'currentTime:', currentTime)
+        const currentFrameIndex = time2FrameIndex(currentTime, tickRow.frameRate, startOffset);
         if (direction === 'forward') {
-            const nearestTrueTime = bookmarkedFrames.reduce((prev, curr) => 
-                Math.abs(curr - currentTime) < Math.abs(prev - currentTime) ? curr : prev
-            );
-            const nearestTrueTimeIndex = bookmarkedFrames.indexOf(nearestTrueTime);
-            nextTime = bookmarkedFrames[nearestTrueTimeIndex + (startOffset <= currentTime)];
+            const nextIndex = tickRow.bookmarkedFrames.find(index => index > currentFrameIndex);
+            nextTime = tickRow.frameTimes[nextIndex];
         } else if (direction === 'backward') {
-            nextTime = [...bookmarkedFrames].reverse().find(time => time <= currentTime);
+            const prevIndex = [...tickRow.bookmarkedFrames].reverse().find(index => index < currentFrameIndex);
+            nextTime = tickRow.frameTimes[prevIndex];
         }
 
         if (nextTime !== undefined) {
@@ -101,7 +95,7 @@ function App() {
         const newTickRowsData = tickRowsData.map((tickRow, index) => ({
             ...tickRow,
             frameRate: updatedFrameRates[index],
-            frameTimes: calculateFrameTimes(tickRow.frameRate, totalDuration),
+            frameTimes: calculateFrameTimes(updatedFrameRates[index], totalDuration),
         }));
         setTickRowsData(newTickRowsData);
     };
@@ -132,18 +126,16 @@ function App() {
         }
     };
 
-    // 新しい動画ファイルの選択時に初期化する
     useEffect(() => {
         if (videoFile) {
             setCurrentTime(0);
             setTotalDuration(0);
             setTickRowsData([
-                { frameRate: 23.99, frameTimes: [] },
-                { frameRate: 24, frameTimes: [] },
-                { frameRate: 30, frameTimes: [] }
+                { frameRate: 23.99, frameTimes: [], bookmarkedFrames: [] },
+                { frameRate: 24, frameTimes: [], bookmarkedFrames: [] },
+                { frameRate: 30, frameTimes: [], bookmarkedFrames: [] }
             ]);
-            setBookmarkedFrames([]); // 枝折りを初期化
-            videoRef.current.load(); // 新しい動画をロード
+            videoRef.current.load();
         }
     }, [videoFile]);
 
@@ -180,7 +172,6 @@ function App() {
                         onFrameOkuri={handleFrameOkuri}
                         onFrameRateChange={handleFrameRateChange}
                         startOffset={startOffset}
-                        bookmarkedFrames={bookmarkedFrames}
                         onBookmarkToggle={handleBookmarkToggle}
                         onBookmarkFrameOkuri={handleBookmarkFrameOkuri}
                     />

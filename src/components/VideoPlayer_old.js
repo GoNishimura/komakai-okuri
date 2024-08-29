@@ -4,10 +4,10 @@ const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata, videoRef }) =>
 
     useEffect(() => {
         const videoElement = videoRef.current;
-        console.log('useEffect @ videoplayer videoElement:', videoElement)
+        // console.log('useEffect @ videoplayer videoElement:', videoElement)
 
         if (videoElement) {
-            console.log('useEffect @ videoplayer working videoElement.duration:', videoElement.duration)
+            // console.log('useEffect @ videoplayer working videoElement.duration:', videoElement.duration)
             videoElement.muted = true;
 
             const handleTimeUpdate = () => {
@@ -15,7 +15,7 @@ const VideoPlayer = ({ videoFile, onTimeUpdate, onLoadedMetadata, videoRef }) =>
             };
 
             const handleLoadedMetadata = () => {
-                console.log('handleLoadedMetadata @ videoplayer')
+                // console.log('handleLoadedMetadata @ videoplayer')
                 onLoadedMetadata(videoElement.duration);
             };
 
