@@ -20,6 +20,12 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
         }
     };
 
+    const showFrameNumber = (time, frameRate) => {
+        const fullFrameNumber = ((duration - startOffset) * frameRate + 1).toFixed(3).toString();
+        const frameNumberNow = ((time - startOffset) * frameRate + 1).toFixed(3).toString();
+        return frameNumberNow.padStart(fullFrameNumber.length, '0')
+    };
+
     return (
         <div className="timeline">
             {tickRowsData.map((tickRow, index) => (
@@ -32,7 +38,7 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
                             style={{ width: '4em' }}
                         />
                         <span>コマ/秒（FPS）</span>
-                        <span>{((currentTime - startOffset) * tickRow.frameRate + 1).toFixed(3)} コマ目</span>
+                        <span>{showFrameNumber(currentTime, tickRow.frameRate)} コマ目</span>
                         <button onClick={() => onFrameOkuri(tickRow.frameRate, 'backward')}>←</button>
                         <button onClick={() => onFrameOkuri(tickRow.frameRate, 'forward')}>→</button>
                         <button onClick={() => onBookmarkToggle(index)}>
