@@ -1,9 +1,9 @@
 import { time2FrameIndex } from '../utils.js';
 
-function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRateChange, startOffset, onBookmarkToggle, onBookmarkFrameOkuri }) {
+function Timeline({ duration, currentTime, layersData, onFrameOkuri, onFrameRateChange, startOffset, onBookmarkToggle, onBookmarkFrameOkuri, onRemoveLayer }) {
 
     const handleFrameRateChange = (index, newFrameRate) => {
-        const updatedFrameRates = tickRowsData.map(row => row.frameRate);
+        const updatedFrameRates = layersData.map(row => row.frameRate);
         updatedFrameRates[index] = parseFloat(newFrameRate);
         onFrameRateChange(updatedFrameRates);
     };
@@ -12,8 +12,8 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
         const timelineRowBody = e.currentTarget;
         const clickPosition = e.clientX - timelineRowBody.getBoundingClientRect().left;
         const clickTime = (clickPosition / timelineRowBody.offsetWidth) * duration;
-        const tickRow = tickRowsData.find(tickRow => tickRow.frameRate === frameRate);
-        const nearestPreviousTime = [...tickRow.frameTimes].reverse().find(time => time <= clickTime);
+        const layer = layersData.find(layer => layer.frameRate === frameRate);
+        const nearestPreviousTime = [...layer.frameTimes].reverse().find(time => time <= clickTime);
         const video = document.querySelector('video');
         if (video) {
             video.currentTime = nearestPreviousTime !== undefined ? nearestPreviousTime : clickTime;
@@ -27,78 +27,65 @@ function Timeline({ duration, currentTime, tickRowsData, onFrameOkuri, onFrameRa
     };
 
     return (
-        <div className="timeline">
-            {tickRowsData.map((tickRow, index) => (
-                <div key={index} className="timeline-row">
-                    <div className="timeline-row-header">
-                        <input
-                            type="number"
-                            value={tickRow.frameRate}
-                            onChange={(e) => handleFrameRateChange(index, e.target.value)}
-                            style={{ width: '4em' }}
-                        />
-                        <span>コマ/秒（FPS）</span>
-                        <span>{showFrameNumber(currentTime, tickRow.frameRate)} コマ目</span>
-                        <button onClick={() => onFrameOkuri(tickRow.frameRate, 'backward')}>←</button>
-                        <button onClick={() => onFrameOkuri(tickRow.frameRate, 'forward')}>→</button>
-                        <button onClick={() => onBookmarkToggle(index)}>
-                            {tickRow.bookmarkedFrames.includes(time2FrameIndex(currentTime, tickRow.frameRate, startOffset)) ? '枝折り解除' : '枝折る'}
-                        </button>
-                        <button onClick={() => onBookmarkFrameOkuri(index, 'backward')}>枝折り←</button>
-                        <button onClick={() => onBookmarkFrameOkuri(index, 'forward')}>枝折り→</button>
-                    </div>
-                    <div className="timeline-row-body" onClick={(e) => handleClickOnFrame(e, tickRow.frameRate)}>
-                        {tickRow.frameTimes.map((time, i) => (
+        <div>
+            {layersData.map((layer, index) => (
+                <div key={index} className="tick-row">
+                    <input 
+                        type="number" 
+                        value={layer.frameRate} 
+                        onChange={(e) => handleFrameRateChange(index, e.target.value)}
+                        style={{ width: '4em' }}
+                    />コマ/秒（FPS）
+                    <span>{showFrameNumber(currentTime, layer.frameRate)} コマ目</span>
+                    <button onClick={() => onFrameOkuri(layer.frameRate, 'backward')}>前コマ</button>
+                    <button onClick={() => onFrameOkuri(layer.frameRate, 'forward')}>次コマ</button>
+                    <button onClick={() => onBookmarkFrameOkuri(index, 'backward')}>前枝折り</button>
+                    <button onClick={() => onBookmarkFrameOkuri(index, 'forward')}>次枝折り</button>
+                    <button onClick={() => onBookmarkToggle(index)}>
+                        枝折り{layer.bookmarkedFrames.includes(time2FrameIndex(currentTime, layer.frameRate, startOffset)) ? '解除' : '登録'}
+                    </button>
+                    <button onClick={() => onRemoveLayer(index)}>画層削除</button>
+                    <div className="timeline-bar" onClick={(e) => handleClickOnFrame(e, layer.frameRate)}>
+                        {layer.frameTimes.map((time, frameIndex) => (
                             <div
-                                key={i}
-                                className={`tick-mark ${tickRow.bookmarkedFrames.includes(i) ? 'bookmarked' : ''}`}
-                                style={{ left: `${(time / duration) * 100}%` }}
-                            />
+                            key={frameIndex}
+                            className={`tick${layer.bookmarkedFrames.includes(frameIndex) ? ' bookmarked' : ''}`}
+                            style={{ left: `${(time / duration) * 100}%` }}
+                            ></div>
                         ))}
                         <div
                             className="current-time-indicator"
                             style={{ left: `${(currentTime / duration) * 100}%` }}
-                        />
+                        ></div>
                     </div>
                 </div>
             ))}
             <style jsx="true">{`
-                .timeline {
-                    position: relative;
-                    height: 100px;
-                    border: 1px solid #ccc;
+                .tick-row {
+                    margin-bottom: 10px;
                 }
-                .timeline-row {
+                .timeline-bar {
                     position: relative;
-                    margin-bottom: 5px;
-                }
-                .timeline-row-header {
-                    display: flex;
-                    align-items: center;
-                    margin-bottom: 5px;
-                }
-                .timeline-row-body {
-                    position: relative;
-                    flex-grow: 1;
                     height: 20px;
-                    background: #eee;
-                }
-                .tick-mark {
-                    position: absolute;
-                    width: 1px;
-                    height: 100%;
-                    background: #666;
-                }
-                .tick-mark.bookmarked {
-                    background: green;
-                    width: 4px;
+                    background-color: #e0e0e0;
                 }
                 .current-time-indicator {
                     position: absolute;
-                    top: 0;
-                    bottom: 0;
+                    height: 100%;
                     width: 2px;
                     background-color: red;
+                    top: 0;
+                }
+                .tick {
+                    position: absolute;
+                    height: 100%;
+                    width: 1px;
+                    background-color: black;
+                    top: 0;
+                }
+                .tick.bookmarked {
+                    background-color: green;
+                    width: 3px;
                 }
             `}</style>
         </div>

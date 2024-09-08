@@ -4,12 +4,11 @@ import VideoPlayer from './components/VideoPlayer';
 import Timeline from './components/Timeline';
 import { time2FrameIndex } from './utils.js';
 
-
 function App() {
     const [videoFile, setVideoFile] = useState(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [totalDuration, setTotalDuration] = useState(0);
-    const [tickRowsData, setTickRowsData] = useState([]);
+    const [layersData, setlayersData] = useState([]);
     const [startOffset, setStartOffset] = useState(0.001);
 
     const videoRef = useRef(null);
@@ -22,7 +21,7 @@ function App() {
         setCurrentTime(time);
     }, []);
 
-    const calculateFrameTimes = (frameRate, duration, offset=startOffset) => {
+    const calculateFrameTimes = (frameRate, duration, offset = startOffset) => {
         const frameTimes = [];
         let time = offset;
 
@@ -30,26 +29,26 @@ function App() {
             frameTimes.push(time);
             time += 1 / frameRate;
         }
-        
+
         return frameTimes;
     };
 
     const handleLoadedMetadata = (duration) => {
         setTotalDuration(duration);
-        const newTickRowsData = tickRowsData.map((tickRow) => ({
-            ...tickRow,
-            frameTimes: calculateFrameTimes(tickRow.frameRate, duration),
+        const newlayersData = layersData.map((layer) => ({
+            ...layer,
+            frameTimes: calculateFrameTimes(layer.frameRate, duration),
             bookmarkedFrames: [], // 新たに追加
         }));
-        setTickRowsData(newTickRowsData);
+        setlayersData(newlayersData);
         const video = document.querySelector('video');
         video.currentTime = startOffset;
     };
 
     const handleFrameOkuri = (frameRate, direction) => {
-        const times = tickRowsData.find(row => row.frameRate === frameRate).frameTimes;
+        const times = layersData.find(row => row.frameRate === frameRate).frameTimes;
         let nextTime;
-        
+
         const nextIndex = time2FrameIndex(currentTime, frameRate, startOffset) + (direction === 'forward' ? 1 : -1);
         if (nextIndex >= times.length || nextIndex < 0) return;
         nextTime = times[Math.max(nextIndex, 0)];
@@ -57,32 +56,32 @@ function App() {
         video.currentTime = nextTime;
     };
 
-    const handleBookmarkToggle = (tickRowIndex) => {
-        const newTickRowsData = [...tickRowsData];
-        const bookmarkedFrames = newTickRowsData[tickRowIndex].bookmarkedFrames;
-        const currentFrameIndex = time2FrameIndex(currentTime, tickRowsData[tickRowIndex].frameRate, startOffset);
+    const handleBookmarkToggle = (layerIndex) => {
+        const newlayersData = [...layersData];
+        const bookmarkedFrames = newlayersData[layerIndex].bookmarkedFrames;
+        const currentFrameIndex = time2FrameIndex(currentTime, layersData[layerIndex].frameRate, startOffset);
         if (currentFrameIndex < 0) return;
 
         if (bookmarkedFrames.includes(currentFrameIndex)) {
-            newTickRowsData[tickRowIndex].bookmarkedFrames = bookmarkedFrames.filter(index => index !== currentFrameIndex);
+            newlayersData[layerIndex].bookmarkedFrames = bookmarkedFrames.filter(index => index !== currentFrameIndex);
         } else {
-            newTickRowsData[tickRowIndex].bookmarkedFrames = [...bookmarkedFrames, currentFrameIndex].sort((a, b) => a - b);
+            newlayersData[layerIndex].bookmarkedFrames = [...bookmarkedFrames, currentFrameIndex].sort((a, b) => a - b);
         }
-        setTickRowsData(newTickRowsData);
+        setlayersData(newlayersData);
     };
 
-    const handleBookmarkFrameOkuri = (tickRowIndex, direction) => {
-        const tickRow = tickRowsData[tickRowIndex];
-        if (tickRow.bookmarkedFrames.length === 0) return;
+    const handleBookmarkFrameOkuri = (layerIndex, direction) => {
+        const layer = layersData[layerIndex];
+        if (layer.bookmarkedFrames.length === 0) return;
         let nextTime;
 
-        const currentFrameIndex = time2FrameIndex(currentTime, tickRow.frameRate, startOffset);
+        const currentFrameIndex = time2FrameIndex(currentTime, layer.frameRate, startOffset);
         if (direction === 'forward') {
-            const nextIndex = tickRow.bookmarkedFrames.find(index => index > currentFrameIndex);
-            nextTime = tickRow.frameTimes[nextIndex];
+            const nextIndex = layer.bookmarkedFrames.find(index => index > currentFrameIndex);
+            nextTime = layer.frameTimes[nextIndex];
         } else if (direction === 'backward') {
-            const prevIndex = [...tickRow.bookmarkedFrames].reverse().find(index => index < currentFrameIndex);
-            nextTime = tickRow.frameTimes[prevIndex];
+            const prevIndex = [...layer.bookmarkedFrames].reverse().find(index => index < currentFrameIndex);
+            nextTime = layer.frameTimes[prevIndex];
         }
 
         if (nextTime !== undefined) {
@@ -92,22 +91,22 @@ function App() {
     };
 
     const handleFrameRateChange = (updatedFrameRates) => {
-        const newTickRowsData = tickRowsData.map((tickRow, index) => ({
-            ...tickRow,
+        const newlayersData = layersData.map((layer, index) => ({
+            ...layer,
             frameRate: updatedFrameRates[index],
             frameTimes: calculateFrameTimes(updatedFrameRates[index], totalDuration),
         }));
-        setTickRowsData(newTickRowsData);
+        setlayersData(newlayersData);
     };
 
     const handleStartOffsetChange = (e) => {
         const newOffset = Math.max(0, parseFloat(e.target.value));
         setStartOffset(newOffset);
-        const newTickRowsData = tickRowsData.map((tickRow) => ({
-            ...tickRow,
-            frameTimes: calculateFrameTimes(tickRow.frameRate, totalDuration, newOffset),
+        const newlayersData = layersData.map((layer) => ({
+            ...layer,
+            frameTimes: calculateFrameTimes(layer.frameRate, totalDuration, newOffset),
         }));
-        setTickRowsData(newTickRowsData);
+        setlayersData(newlayersData);
     };
 
     const handleSaveFrame = () => {
@@ -126,11 +125,36 @@ function App() {
         }
     };
 
+    const addLayer = () => {
+        if (layersData.length > 0) {
+            const lastLayer = layersData[layersData.length - 1];
+            const newLayer = {
+                ...lastLayer,
+                frameTimes: [...lastLayer.frameTimes],
+                bookmarkedFrames: [...lastLayer.bookmarkedFrames],
+            };
+            setlayersData([...layersData, newLayer]);
+        } else {
+            // 初回のレイヤー追加時のデフォルトデータ
+            const newLayer = {
+                frameRate: 24,
+                frameTimes: calculateFrameTimes(24, totalDuration, startOffset),
+                bookmarkedFrames: [],
+            };
+            setlayersData([newLayer]);
+        }
+    };
+
+    const removeLayer = (index) => {
+        const newlayersData = layersData.filter((_, i) => i !== index);
+        setlayersData(newlayersData);
+    };
+
     useEffect(() => {
         if (videoFile) {
             setCurrentTime(0);
             setTotalDuration(0);
-            setTickRowsData([
+            setlayersData([
                 { frameRate: 23.99, frameTimes: [], bookmarkedFrames: [] },
                 { frameRate: 24, frameTimes: [], bookmarkedFrames: [] },
                 { frameRate: 30, frameTimes: [], bookmarkedFrames: [] }
@@ -160,7 +184,7 @@ function App() {
                                 step="0.001"
                                 min="0"
                                 style={{ width: '4em' }}
-                                />秒
+                            />秒
                         </label>
                         <div>{currentTime.toFixed(3)} / {totalDuration.toFixed(3)}秒</div>
                         <button onClick={handleSaveFrame}>このコマを保存</button>
@@ -168,13 +192,15 @@ function App() {
                     <Timeline
                         duration={totalDuration}
                         currentTime={currentTime}
-                        tickRowsData={tickRowsData}
+                        layersData={layersData}
                         onFrameOkuri={handleFrameOkuri}
                         onFrameRateChange={handleFrameRateChange}
                         startOffset={startOffset}
                         onBookmarkToggle={handleBookmarkToggle}
                         onBookmarkFrameOkuri={handleBookmarkFrameOkuri}
+                        onRemoveLayer={removeLayer}
                     />
+                    <button onClick={addLayer}>画層を増やす</button>
                 </div>
             )}
             <style jsx="true">{`
