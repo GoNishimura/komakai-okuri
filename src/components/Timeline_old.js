@@ -1,11 +1,21 @@
 import { time2FrameIndex } from '../utils.js';
 
-function Timeline({ duration, currentTime, layersData, onFrameOkuri, onFrameRateChange, startOffset, onBookmarkToggle, onBookmarkFrameOkuri, onRemoveLayer }) {
-
-    const handleFrameRateChange = (index, newFrameRate) => {
-        const updatedFrameRates = layersData.map(row => row.frameRate);
-        updatedFrameRates[index] = parseFloat(newFrameRate);
-        onFrameRateChange(updatedFrameRates);
+const Timeline = ({ 
+    duration, 
+    currentTime, 
+    layersData, 
+    onFrameOkuri, 
+    onFrameRateChange, 
+    startOffset, 
+    onBookmarkToggle, 
+    onBookmarkFrameOkuri,
+    onRemoveLayer,
+    onMoveLayer
+}) => {
+    const handleFrameRateChange = (event, index) => {
+        const newFrameRates = [...layersData.map(layer => layer.frameRate)];
+        newFrameRates[index] = parseFloat(event.target.value);
+        onFrameRateChange(newFrameRates);
     };
 
     const handleClickOnFrame = (e, frameRate) => {
@@ -29,7 +39,7 @@ function Timeline({ duration, currentTime, layersData, onFrameOkuri, onFrameRate
     return (
         <div>
             {layersData.map((layer, index) => (
-                <div key={index} className="tick-row">
+                <div key={index} className="layer">
                     <input 
                         type="number" 
                         value={layer.frameRate} 
@@ -39,11 +49,13 @@ function Timeline({ duration, currentTime, layersData, onFrameOkuri, onFrameRate
                     <span>{showFrameNumber(currentTime, layer.frameRate)} コマ目</span>
                     <button onClick={() => onFrameOkuri(layer.frameRate, 'backward')}>前コマ</button>
                     <button onClick={() => onFrameOkuri(layer.frameRate, 'forward')}>次コマ</button>
-                    <button onClick={() => onBookmarkFrameOkuri(index, 'backward')}>前枝折り</button>
-                    <button onClick={() => onBookmarkFrameOkuri(index, 'forward')}>次枝折り</button>
                     <button onClick={() => onBookmarkToggle(index)}>
-                        枝折り{layer.bookmarkedFrames.includes(time2FrameIndex(currentTime, layer.frameRate, startOffset)) ? '解除' : '登録'}
+                        {layer.bookmarkedFrames.includes(time2FrameIndex(currentTime, layer.frameRate, startOffset)) ? '栞解除' : '枝折る'}
                     </button>
+                    <button onClick={() => onBookmarkFrameOkuri(index, 'backward')}>前栞</button>
+                    <button onClick={() => onBookmarkFrameOkuri(index, 'forward')}>次栞</button>
+                    <button onClick={() => onMoveLayer(index, 'up')}>上へ</button>
+                    <button onClick={() => onMoveLayer(index, 'down')}>下へ</button>
                     <button onClick={() => onRemoveLayer(index)}>画層削除</button>
                     <div className="timeline-bar" onClick={(e) => handleClickOnFrame(e, layer.frameRate)}>
                         {layer.frameTimes.map((time, frameIndex) => (
@@ -61,7 +73,7 @@ function Timeline({ duration, currentTime, layersData, onFrameOkuri, onFrameRate
                 </div>
             ))}
             <style jsx="true">{`
-                .tick-row {
+                .layer {
                     margin-bottom: 10px;
                 }
                 .timeline-bar {
@@ -90,6 +102,6 @@ function Timeline({ duration, currentTime, layersData, onFrameOkuri, onFrameRate
             `}</style>
         </div>
     );
-}
+};
 
 export default Timeline;

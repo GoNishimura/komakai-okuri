@@ -8,7 +8,7 @@ function App() {
     const [videoFile, setVideoFile] = useState(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [totalDuration, setTotalDuration] = useState(0);
-    const [layersData, setlayersData] = useState([]);
+    const [layersData, setLayersData] = useState([]);
     const [startOffset, setStartOffset] = useState(0.001);
 
     const videoRef = useRef(null);
@@ -38,9 +38,9 @@ function App() {
         const newlayersData = layersData.map((layer) => ({
             ...layer,
             frameTimes: calculateFrameTimes(layer.frameRate, duration),
-            bookmarkedFrames: [], // 新たに追加
+            bookmarkedFrames: [],
         }));
-        setlayersData(newlayersData);
+        setLayersData(newlayersData);
         const video = document.querySelector('video');
         video.currentTime = startOffset;
     };
@@ -67,7 +67,7 @@ function App() {
         } else {
             newlayersData[layerIndex].bookmarkedFrames = [...bookmarkedFrames, currentFrameIndex].sort((a, b) => a - b);
         }
-        setlayersData(newlayersData);
+        setLayersData(newlayersData);
     };
 
     const handleBookmarkFrameOkuri = (layerIndex, direction) => {
@@ -96,7 +96,7 @@ function App() {
             frameRate: updatedFrameRates[index],
             frameTimes: calculateFrameTimes(updatedFrameRates[index], totalDuration),
         }));
-        setlayersData(newlayersData);
+        setLayersData(newlayersData);
     };
 
     const handleStartOffsetChange = (e) => {
@@ -106,7 +106,7 @@ function App() {
             ...layer,
             frameTimes: calculateFrameTimes(layer.frameRate, totalDuration, newOffset),
         }));
-        setlayersData(newlayersData);
+        setLayersData(newlayersData);
     };
 
     const handleSaveFrame = () => {
@@ -133,28 +133,37 @@ function App() {
                 frameTimes: [...lastLayer.frameTimes],
                 bookmarkedFrames: [...lastLayer.bookmarkedFrames],
             };
-            setlayersData([...layersData, newLayer]);
+            setLayersData([...layersData, newLayer]);
         } else {
-            // 初回のレイヤー追加時のデフォルトデータ
             const newLayer = {
                 frameRate: 24,
                 frameTimes: calculateFrameTimes(24, totalDuration, startOffset),
                 bookmarkedFrames: [],
             };
-            setlayersData([newLayer]);
+            setLayersData([newLayer]);
         }
     };
 
     const removeLayer = (index) => {
         const newlayersData = layersData.filter((_, i) => i !== index);
-        setlayersData(newlayersData);
+        setLayersData(newlayersData);
+    };
+
+    const moveLayer = (index, direction) => {
+        const newLayersData = [...layersData];
+        if (direction === 'up' && index > 0) {
+            [newLayersData[index], newLayersData[index - 1]] = [newLayersData[index - 1], newLayersData[index]];
+        } else if (direction === 'down' && index < newLayersData.length - 1) {
+            [newLayersData[index], newLayersData[index + 1]] = [newLayersData[index + 1], newLayersData[index]];
+        }
+        setLayersData(newLayersData);
     };
 
     useEffect(() => {
         if (videoFile) {
             setCurrentTime(0);
             setTotalDuration(0);
-            setlayersData([
+            setLayersData([
                 { frameRate: 23.99, frameTimes: [], bookmarkedFrames: [] },
                 { frameRate: 24, frameTimes: [], bookmarkedFrames: [] },
                 { frameRate: 30, frameTimes: [], bookmarkedFrames: [] }
@@ -199,8 +208,9 @@ function App() {
                         onBookmarkToggle={handleBookmarkToggle}
                         onBookmarkFrameOkuri={handleBookmarkFrameOkuri}
                         onRemoveLayer={removeLayer}
+                        onMoveLayer={moveLayer}
                     />
-                    <button onClick={addLayer}>画層を増やす</button>
+                    <button onClick={addLayer}>画層を追加</button>
                 </div>
             )}
             <style jsx="true">{`
