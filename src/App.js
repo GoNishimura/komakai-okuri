@@ -25,6 +25,7 @@ function App() {
         layerUp: '[',
         layerDown: ']',
         saveFrame: 'p',
+        saveData: 'S'
     });
 
     const videoRef = useRef(null);
@@ -126,22 +127,6 @@ function App() {
         setLayersData(newLayersData);
     };
 
-    const handleSaveFrame = useCallback(() => {
-        const videoElement = videoRef.current;
-        if (videoElement) {
-            const canvas = document.createElement('canvas');
-            canvas.width = videoElement.videoWidth;
-            canvas.height = videoElement.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-            const dataURL = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.href = dataURL;
-            link.download = `frame_${currentTime.toFixed(3)}s.png`;
-            link.click();
-        }
-    }, [currentTime]);
-
     const addLayer = () => {
         if (layersData.length > 0) {
             const lastLayer = layersData[layersData.length - 1];
@@ -179,6 +164,51 @@ function App() {
         setLayersData(newLayersData);
     }, [layersData]);
 
+    const handleSaveFrame = useCallback(() => {
+        const videoElement = videoRef.current;
+        if (videoElement) {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = `frame_${currentTime.toFixed(3)}s.png`;
+            link.click();
+        }
+    }, [currentTime]);
+
+    const saveDataToFile = useCallback(() => {
+        const data = {
+            layersData,
+            startOffset,
+            colorPalette,
+            shortcuts,
+        };
+        const fileName = videoFile.name + ".json";
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName;
+        a.click();
+    }, [colorPalette, layersData, shortcuts, startOffset, videoFile]);
+
+    const loadDataFromFile = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            const data = JSON.parse(reader.result);
+            setLayersData(data.layersData);
+            setStartOffset(data.startOffset);
+            setColorPalette(data.colorPalette);
+            setShortcuts(data.shortcuts);
+        };
+        reader.readAsText(file);
+    };
+
     const toggleSettingsMenu = () => {
         setShowSettingsMenu(!showSettingsMenu);
     };
@@ -203,7 +233,6 @@ function App() {
 
     useEffect(() => {
         const handleKeyDown = (event) => {
-            console.log(event.key)
             if (event.key === shortcuts.playPause) {
                 const video = document.querySelector('video');
                 if (video.paused) video.play();
@@ -228,6 +257,8 @@ function App() {
                 moveLayer(selectedLayerIndex, 'down');
             } else if (event.key === shortcuts.saveFrame) {
                 handleSaveFrame();
+            } else if (event.shiftKey && event.key === shortcuts.saveData) {
+                saveDataToFile();
             } else if (!isNaN(event.key)) {
                 const selectedIndex = parseInt(event.key) - 1;
                 if (0 <= selectedIndex && selectedIndex < layersData.length) setSelectedLayerIndex(selectedIndex);
@@ -236,7 +267,7 @@ function App() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [shortcuts, layersData, selectedLayerIndex, handleFrameOkuri, handleBookmarkToggle, handleBookmarkFrameOkuri, moveLayer, handleSaveFrame]);
+    }, [shortcuts, layersData, selectedLayerIndex, handleFrameOkuri, handleBookmarkToggle, handleBookmarkFrameOkuri, moveLayer, handleSaveFrame, saveDataToFile]);
 
     useEffect(() => {
         if (videoFile) {
@@ -300,8 +331,10 @@ function App() {
                     <button onClick={addLayer}>画層を追加</button>
                 </div>
             )}
-            
-            <button onClick={toggleSettingsMenu}>{showSettingsMenu ? '設定を閉じる' : '設定を開く'}</button>
+
+            {videoFile && (
+                <button onClick={toggleSettingsMenu}>{showSettingsMenu ? '設定を閉じる' : '設定を開く'}</button>
+            )}
             {showSettingsMenu && (
                 <div className="settings-menu">
                     <h3>設定</h3>
@@ -407,12 +440,32 @@ function App() {
                                 onChange={(e) => handleShortcutChange('saveFrame', e.target.value)}
                             />
                         </label>
+                        <label>
+                            諸元を保存:
+                            <input
+                                type="text"
+                                value={shortcuts.saveData}
+                                onChange={(e) => handleShortcutChange('saveData', e.target.value)}
+                            />
+                        </label>
                     </div>
                     <div>
                         <label>
                             N番目の画層を選択: 数字キー
                         </label>
                     </div>
+                </div>
+            )}
+            {videoFile && (
+                <div>
+                    <button 
+                        onClick={saveDataToFile}
+                        onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.saveData)}
+                    >諸元を保存</button>
+                    <label>
+                        諸元を読み込む:
+                        <input type="file" accept="application/json" onChange={loadDataFromFile} />
+                    </label>
                 </div>
             )}
 
