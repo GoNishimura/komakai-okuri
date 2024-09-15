@@ -469,6 +469,13 @@ function App() {
                     </label>
                 </div>
             )}
+            {videoFile && (
+                <ul>
+                    <li>
+                        <a href='https://ko-fi.com/5246ra' target="_blank" rel="noreferrer">おひねりください</a>
+                    </li>
+                </ul>
+            )}
 
             <style jsx="true">{`
                 .player-supporter {
