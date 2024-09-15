@@ -198,6 +198,7 @@ function App() {
 
     const loadDataFromFile = (e) => {
         const file = e.target.files[0];
+        if (!file) return;
         const reader = new FileReader();
         reader.onload = () => {
             const data = JSON.parse(reader.result);
