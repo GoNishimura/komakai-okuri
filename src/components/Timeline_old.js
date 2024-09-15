@@ -4,17 +4,18 @@ const Timeline = ({
     duration, 
     currentTime, 
     layersData, 
+    startOffset, 
+    tickColors,
     onFrameOkuri, 
     onFrameRateChange, 
-    startOffset, 
     onBookmarkToggle, 
     onBookmarkFrameOkuri,
     onRemoveLayer,
     onMoveLayer,
-    tickColors
+    onTimelineClicked,
 }) => {
 
-    const handleClickOnFrame = (e, frameRate) => {
+    const handleClickOnFrame = (e, frameRate, layerIndex) => {
         const timelineRowBody = e.currentTarget;
         const clickPosition = e.clientX - timelineRowBody.getBoundingClientRect().left;
         const clickTime = (clickPosition / timelineRowBody.offsetWidth) * duration;
@@ -24,6 +25,7 @@ const Timeline = ({
         if (video) {
             video.currentTime = nearestPreviousTime !== undefined ? nearestPreviousTime : clickTime;
         }
+        onTimelineClicked(layerIndex);
     };
 
     const showFrameNumber = (time, frameRate) => {
@@ -55,7 +57,7 @@ const Timeline = ({
                     <button onClick={() => onRemoveLayer(index)}>画層削除</button>
                     <div
                         className="timeline-row-body"
-                        onClick={(e) => handleClickOnFrame(e, layer.frameRate)}
+                        onClick={(e) => handleClickOnFrame(e, layer.frameRate, index)}
                     >
                         {layer.frameTimes.map((time, idx) => {
                             const position = (time / duration) * 100;

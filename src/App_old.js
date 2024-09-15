@@ -198,6 +198,10 @@ function App() {
         }));
     };
 
+    const handleTimelineClicked = (layerIndex) => {
+        setSelectedLayerIndex(layerIndex);
+    }
+
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.key === shortcuts.playPause) {
@@ -273,14 +277,15 @@ function App() {
                         duration={totalDuration}
                         currentTime={currentTime}
                         layersData={layersData}
+                        startOffset={startOffset}
+                        tickColors={tickColors}
                         onFrameOkuri={handleFrameOkuri}
                         onFrameRateChange={handleFrameRateChange}
-                        startOffset={startOffset}
                         onBookmarkToggle={handleBookmarkToggle}
                         onBookmarkFrameOkuri={handleBookmarkFrameOkuri}
                         onRemoveLayer={removeLayer}
                         onMoveLayer={moveLayer}
-                        tickColors={tickColors}
+                        onTimelineClicked={handleTimelineClicked}
                     />
                     <button onClick={addLayer}>画層を追加</button>
                 </div>
