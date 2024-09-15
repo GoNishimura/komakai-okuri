@@ -10,13 +10,9 @@ const Timeline = ({
     onBookmarkToggle, 
     onBookmarkFrameOkuri,
     onRemoveLayer,
-    onMoveLayer
+    onMoveLayer,
+    tickColors
 }) => {
-    const handleFrameRateChange = (event, index) => {
-        const newFrameRates = [...layersData.map(layer => layer.frameRate)];
-        newFrameRates[index] = parseFloat(event.target.value);
-        onFrameRateChange(newFrameRates);
-    };
 
     const handleClickOnFrame = (e, frameRate) => {
         const timelineRowBody = e.currentTarget;
@@ -43,12 +39,12 @@ const Timeline = ({
                     <input 
                         type="number" 
                         value={layer.frameRate} 
-                        onChange={(e) => handleFrameRateChange(index, e.target.value)}
+                        onChange={(e) => onFrameRateChange(index, e.target.value)}
                         style={{ width: '4em' }}
                     />コマ/秒（FPS）
                     <span>{showFrameNumber(currentTime, layer.frameRate)} コマ目</span>
-                    <button onClick={() => onFrameOkuri(layer.frameRate, 'backward')}>前コマ</button>
-                    <button onClick={() => onFrameOkuri(layer.frameRate, 'forward')}>次コマ</button>
+                    <button onClick={() => onFrameOkuri(index, 'backward')}>前コマ</button>
+                    <button onClick={() => onFrameOkuri(index, 'forward')}>次コマ</button>
                     <button onClick={() => onBookmarkToggle(index)}>
                         {layer.bookmarkedFrames.includes(time2FrameIndex(currentTime, layer.frameRate, startOffset)) ? '栞解除' : '枝折る'}
                     </button>
@@ -57,47 +53,54 @@ const Timeline = ({
                     <button onClick={() => onMoveLayer(index, 'up')}>上へ</button>
                     <button onClick={() => onMoveLayer(index, 'down')}>下へ</button>
                     <button onClick={() => onRemoveLayer(index)}>画層削除</button>
-                    <div className="timeline-bar" onClick={(e) => handleClickOnFrame(e, layer.frameRate)}>
-                        {layer.frameTimes.map((time, frameIndex) => (
-                            <div
-                            key={frameIndex}
-                            className={`tick${layer.bookmarkedFrames.includes(frameIndex) ? ' bookmarked' : ''}`}
-                            style={{ left: `${(time / duration) * 100}%` }}
-                            ></div>
-                        ))}
+                    <div
+                        className="timeline-row-body"
+                        onClick={(e) => handleClickOnFrame(e, layer.frameRate)}
+                    >
+                        {layer.frameTimes.map((time, idx) => {
+                            const position = (time / duration) * 100;
+                            const isBookmarked = layer.bookmarkedFrames.includes(idx)
+                            return (
+                                <div
+                                    key={idx}
+                                    className={`tick${isBookmarked ? ' bookmarked' : ''}`}
+                                    style={{
+                                        left: `${position}%`,
+                                        backgroundColor: isBookmarked ? tickColors.bookmark : 'black',
+                                        width: isBookmarked ? '3px' : '1px',
+                                    }}
+                                />
+                            );
+                        })}
                         <div
                             className="current-time-indicator"
-                            style={{ left: `${(currentTime / duration) * 100}%` }}
+                            style={{ 
+                                left: `${(currentTime / duration) * 100}%`, 
+                                backgroundColor: tickColors.currentTimeIndicator
+                            }}
                         ></div>
                     </div>
                 </div>
             ))}
             <style jsx="true">{`
                 .layer {
-                    margin-bottom: 10px;
+                    margin-bottom: 20px;
                 }
-                .timeline-bar {
+                .timeline-row-body {
                     position: relative;
                     height: 20px;
                     background-color: #e0e0e0;
+                    margin: 10px 0;
                 }
                 .current-time-indicator {
                     position: absolute;
                     height: 100%;
                     width: 2px;
-                    background-color: red;
                     top: 0;
                 }
                 .tick {
                     position: absolute;
-                    height: 100%;
-                    width: 1px;
-                    background-color: black;
-                    top: 0;
-                }
-                .tick.bookmarked {
-                    background-color: green;
-                    width: 3px;
+                    height: 20px;
                 }
             `}</style>
         </div>
@@ -105,3 +108,4 @@ const Timeline = ({
 };
 
 export default Timeline;
+
