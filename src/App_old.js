@@ -12,9 +12,10 @@ function App() {
     const [startOffset, setStartOffset] = useState(0.001);
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
     const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
-    const [tickColors, setTickColors] = useState({
+    const [colorPalette, setColorPalette] = useState({
         currentTimeIndicator: '#ff0000',
-        bookmark: '#00ff00'
+        bookmark: '#00ff00',
+        selectedLayer: '#00ffff'
     });
     const [shortcuts, setShortcuts] = useState({
         playPause: 'Space',
@@ -23,8 +24,10 @@ function App() {
         toggleBookmark: 's',
         nextBookmark: '0',
         prevBookmark: '9',
-        layerUp: 'ArrowUp',
-        layerDown: 'ArrowDown',
+        selectUp: 'ArrowUp',
+        selectDown: 'ArrowDown',
+        layerUp: '[',
+        layerDown: ']',
         saveFrame: 'p',
     });
 
@@ -165,7 +168,7 @@ function App() {
     const removeLayer = (layerIndex) => {
         const newLayersData = layersData.filter((_, i) => i !== layerIndex);
         setLayersData(newLayersData);
-        setSelectedLayerIndex(layerIndex > 0 ? layerIndex - 1 : 0);
+        setSelectedLayerIndex(Math.max(layerIndex - 1, 0));
     };
 
     const moveLayer = useCallback((layerIndex, direction) => {
@@ -184,8 +187,8 @@ function App() {
         setShowSettingsMenu(!showSettingsMenu);
     };
 
-    const handleTickColorsChange = (action, newColor) => {
-        setTickColors((prevColors) => ({
+    const handleColorPaletteChange = (action, newColor) => {
+        setColorPalette((prevColors) => ({
             ...prevColors,
             [action]: newColor
         }));
@@ -198,7 +201,7 @@ function App() {
         }));
     };
 
-    const handleTimelineClicked = (layerIndex) => {
+    const handleSelectedLayerChanged = (layerIndex) => {
         setSelectedLayerIndex(layerIndex);
     }
 
@@ -218,6 +221,10 @@ function App() {
                 handleBookmarkFrameOkuri(selectedLayerIndex, 'forward');
             } else if (event.key === shortcuts.prevBookmark) {
                 handleBookmarkFrameOkuri(selectedLayerIndex, 'backward');
+            } else if (event.key === shortcuts.selectUp) {
+                handleSelectedLayerChanged(Math.max(selectedLayerIndex - 1, 0));
+            } else if (event.key === shortcuts.selectDown) {
+                handleSelectedLayerChanged(Math.min(selectedLayerIndex + 1, layersData.length - 1));
             } else if (event.key === shortcuts.layerUp) {
                 moveLayer(selectedLayerIndex, 'up');
             } else if (event.key === shortcuts.layerDown) {
@@ -278,14 +285,15 @@ function App() {
                         currentTime={currentTime}
                         layersData={layersData}
                         startOffset={startOffset}
-                        tickColors={tickColors}
+                        colorPalette={colorPalette}
+                        selectedLayerIndex={selectedLayerIndex}
                         onFrameOkuri={handleFrameOkuri}
                         onFrameRateChange={handleFrameRateChange}
                         onBookmarkToggle={handleBookmarkToggle}
                         onBookmarkFrameOkuri={handleBookmarkFrameOkuri}
                         onRemoveLayer={removeLayer}
                         onMoveLayer={moveLayer}
-                        onTimelineClicked={handleTimelineClicked}
+                        onSelectedLayerChange={handleSelectedLayerChanged}
                     />
                     <button onClick={addLayer}>画層を追加</button>
                 </div>
@@ -296,12 +304,16 @@ function App() {
                 <div className="settings-menu">
                     <h3>設定</h3>
                     <label>
-                        再生位置の色:
-                        <input type="color" value={tickColors.currentTimeIndicator} onChange={(e) => handleTickColorsChange('currentTimeIndicator', e.target.value)} />
+                        再生位置:
+                        <input type="color" value={colorPalette.currentTimeIndicator} onChange={(e) => handleColorPaletteChange('currentTimeIndicator', e.target.value)} />
                     </label>
                     <label>
-                        枝折りの色:
-                        <input type="color" value={tickColors.bookmark} onChange={(e) => handleTickColorsChange('bookmark', e.target.value)} />
+                        枝折り:
+                        <input type="color" value={colorPalette.bookmark} onChange={(e) => handleColorPaletteChange('bookmark', e.target.value)} />
+                    </label>
+                    <label>
+                        選択中の画層:
+                        <input type="color" value={colorPalette.selectedLayer} onChange={(e) => handleColorPaletteChange('selectedLayer', e.target.value)} />
                     </label>
                     <div>
                         <h4>ショートカットキー設定</h4>
@@ -327,6 +339,70 @@ function App() {
                                 type="text"
                                 value={shortcuts.prevFrame}
                                 onChange={(e) => handleShortcutChange('prevFrame', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            枝折り登録・解除:
+                            <input
+                                type="text"
+                                value={shortcuts.toggleBookmark}
+                                onChange={(e) => handleShortcutChange('toggleBookmark', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            次の枝折りコマ:
+                            <input
+                                type="text"
+                                value={shortcuts.nextBookmark}
+                                onChange={(e) => handleShortcutChange('nextBookmark', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            前の枝折りコマ:
+                            <input
+                                type="text"
+                                value={shortcuts.prevBookmark}
+                                onChange={(e) => handleShortcutChange('prevBookmark', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            選択を上へ:
+                            <input
+                                type="text"
+                                value={shortcuts.selectUp}
+                                onChange={(e) => handleShortcutChange('selectUp', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            選択を下へ:
+                            <input
+                                type="text"
+                                value={shortcuts.selectDown}
+                                onChange={(e) => handleShortcutChange('selectDown', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            画層を上へ:
+                            <input
+                                type="text"
+                                value={shortcuts.layerUp}
+                                onChange={(e) => handleShortcutChange('layerUp', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            画層を下へ:
+                            <input
+                                type="text"
+                                value={shortcuts.layerDown}
+                                onChange={(e) => handleShortcutChange('layerDown', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            現在のコマを保存:
+                            <input
+                                type="text"
+                                value={shortcuts.saveFrame}
+                                onChange={(e) => handleShortcutChange('saveFrame', e.target.value)}
                             />
                         </label>
                     </div>

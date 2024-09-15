@@ -5,17 +5,18 @@ const Timeline = ({
     currentTime, 
     layersData, 
     startOffset, 
-    tickColors,
+    colorPalette,
+    selectedLayerIndex,
     onFrameOkuri, 
     onFrameRateChange, 
     onBookmarkToggle, 
     onBookmarkFrameOkuri,
     onRemoveLayer,
     onMoveLayer,
-    onTimelineClicked,
+    onSelectedLayerChange,
 }) => {
 
-    const handleClickOnFrame = (e, frameRate, layerIndex) => {
+    const handleClickOnFrame = (e, frameRate) => {
         const timelineRowBody = e.currentTarget;
         const clickPosition = e.clientX - timelineRowBody.getBoundingClientRect().left;
         const clickTime = (clickPosition / timelineRowBody.offsetWidth) * duration;
@@ -25,7 +26,6 @@ const Timeline = ({
         if (video) {
             video.currentTime = nearestPreviousTime !== undefined ? nearestPreviousTime : clickTime;
         }
-        onTimelineClicked(layerIndex);
     };
 
     const showFrameNumber = (time, frameRate) => {
@@ -37,7 +37,15 @@ const Timeline = ({
     return (
         <div>
             {layersData.map((layer, index) => (
-                <div key={index} className="layer">
+                <div 
+                    key={index} 
+                    className="layer"
+                    style={{
+                        border: selectedLayerIndex === index ? `2px solid ${colorPalette.selectedLayer}` : '2px solid transparent',
+                        cursor: 'pointer',
+                    }}
+                    onClick={() => onSelectedLayerChange(index)}
+                >
                     <input 
                         type="number" 
                         value={layer.frameRate} 
@@ -68,7 +76,7 @@ const Timeline = ({
                                     className={`tick${isBookmarked ? ' bookmarked' : ''}`}
                                     style={{
                                         left: `${position}%`,
-                                        backgroundColor: isBookmarked ? tickColors.bookmark : 'black',
+                                        backgroundColor: isBookmarked ? colorPalette.bookmark : 'black',
                                         width: isBookmarked ? '3px' : '1px',
                                     }}
                                 />
@@ -78,7 +86,7 @@ const Timeline = ({
                             className="current-time-indicator"
                             style={{ 
                                 left: `${(currentTime / duration) * 100}%`, 
-                                backgroundColor: tickColors.currentTimeIndicator
+                                backgroundColor: colorPalette.currentTimeIndicator
                             }}
                         ></div>
                     </div>
