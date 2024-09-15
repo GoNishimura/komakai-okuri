@@ -12,18 +12,14 @@ function App() {
     const [startOffset, setStartOffset] = useState(0.001);
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
     const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
-    const [colorPalette, setColorPalette] = useState({
-        currentTimeIndicator: '#ff0000',
-        bookmark: '#00ff00',
-        selectedLayer: '#00ffff'
-    });
+    const [colorPalette, setColorPalette] = useState({ selectedLayer: '#00FFFF', bookmark: '#00FF00', currentTimeIndicator: '#FF0000' });
     const [shortcuts, setShortcuts] = useState({
         playPause: 'Space',
-        nextFrame: 'ArrowRight',
-        prevFrame: 'ArrowLeft',
-        toggleBookmark: 's',
-        nextBookmark: '0',
-        prevBookmark: '9',
+        nextFrame: 'd',
+        prevFrame: 'a',
+        toggleBookmark: 'f',
+        nextBookmark: 'e',
+        prevBookmark: 'q',
         selectUp: 'ArrowUp',
         selectDown: 'ArrowDown',
         layerUp: '[',
@@ -207,6 +203,7 @@ function App() {
 
     useEffect(() => {
         const handleKeyDown = (event) => {
+            console.log(event.key)
             if (event.key === shortcuts.playPause) {
                 const video = document.querySelector('video');
                 if (video.paused) video.play();
@@ -278,7 +275,11 @@ function App() {
                             />秒
                         </label>
                         <div>{currentTime.toFixed(3)} / {totalDuration.toFixed(3)}秒</div>
-                        <button onClick={handleSaveFrame}>このコマを保存</button>
+                        <button 
+                            onClick={handleSaveFrame}
+                            onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.saveFrame)}
+                        >
+                        このコマを保存</button>
                     </div>
                     <Timeline
                         duration={totalDuration}
@@ -287,6 +288,7 @@ function App() {
                         startOffset={startOffset}
                         colorPalette={colorPalette}
                         selectedLayerIndex={selectedLayerIndex}
+                        shortcuts={shortcuts}
                         onFrameOkuri={handleFrameOkuri}
                         onFrameRateChange={handleFrameRateChange}
                         onBookmarkToggle={handleBookmarkToggle}
@@ -404,6 +406,11 @@ function App() {
                                 value={shortcuts.saveFrame}
                                 onChange={(e) => handleShortcutChange('saveFrame', e.target.value)}
                             />
+                        </label>
+                    </div>
+                    <div>
+                        <label>
+                            N番目の画層を選択: 数字キー
                         </label>
                     </div>
                 </div>

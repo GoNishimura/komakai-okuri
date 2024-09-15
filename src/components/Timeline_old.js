@@ -7,6 +7,7 @@ const Timeline = ({
     startOffset, 
     colorPalette,
     selectedLayerIndex,
+    shortcuts,
     onFrameOkuri, 
     onFrameRateChange, 
     onBookmarkToggle, 
@@ -53,15 +54,34 @@ const Timeline = ({
                         style={{ width: '4em' }}
                     />コマ/秒（FPS）
                     <span>{showFrameNumber(currentTime, layer.frameRate)} コマ目</span>
-                    <button onClick={() => onFrameOkuri(index, 'backward')}>前コマ</button>
-                    <button onClick={() => onFrameOkuri(index, 'forward')}>次コマ</button>
-                    <button onClick={() => onBookmarkToggle(index)}>
-                        {layer.bookmarkedFrames.includes(time2FrameIndex(currentTime, layer.frameRate, startOffset)) ? '栞解除' : '枝折る'}
-                    </button>
-                    <button onClick={() => onBookmarkFrameOkuri(index, 'backward')}>前栞</button>
-                    <button onClick={() => onBookmarkFrameOkuri(index, 'forward')}>次栞</button>
-                    <button onClick={() => onMoveLayer(index, 'up')}>上へ</button>
-                    <button onClick={() => onMoveLayer(index, 'down')}>下へ</button>
+                    <button 
+                        onMouseEnter={(e) => e.target.setAttribute('title', selectedLayerIndex === index ? shortcuts.prevFrame : `${index + 1}  + ${shortcuts.prevFrame}`)} 
+                        onClick={() => onFrameOkuri(index, 'backward')}
+                    >前コマ</button>
+                    <button 
+                        onMouseEnter={(e) => e.target.setAttribute('title', selectedLayerIndex === index ? shortcuts.nextFrame : `${index + 1}  + ${shortcuts.nextFrame}`)} 
+                        onClick={() => onFrameOkuri(index, 'forward')}
+                    >次コマ</button>
+                    <button 
+                        onMouseEnter={(e) => e.target.setAttribute('title', selectedLayerIndex === index ? shortcuts.toggleBookmark : `${index + 1}  + ${shortcuts.toggleBookmark}`)} 
+                        onClick={() => onBookmarkToggle(index)}
+                    >{layer.bookmarkedFrames.includes(time2FrameIndex(currentTime, layer.frameRate, startOffset)) ? '栞解除' : '枝折る'}</button>
+                    <button 
+                        onMouseEnter={(e) => e.target.setAttribute('title', selectedLayerIndex === index ? shortcuts.prevBookmark : `${index + 1}  + ${shortcuts.prevBookmark}`)} 
+                        onClick={() => onBookmarkFrameOkuri(index, 'backward')}
+                    >前栞</button>
+                    <button 
+                        onMouseEnter={(e) => e.target.setAttribute('title', selectedLayerIndex === index ? shortcuts.nextBookmark : `${index + 1}  + ${shortcuts.nextBookmark}`)} 
+                        onClick={() => onBookmarkFrameOkuri(index, 'forward')}
+                    >次栞</button>
+                    <button 
+                        onMouseEnter={(e) => e.target.setAttribute('title', selectedLayerIndex === index ? shortcuts.layerUp : `${index + 1}  + ${shortcuts.layerUp}`)} 
+                        onClick={() => onMoveLayer(index, 'up')}
+                    >上へ</button>
+                    <button 
+                        onMouseEnter={(e) => e.target.setAttribute('title', selectedLayerIndex === index ? shortcuts.layerDown : `${index + 1}  + ${shortcuts.layerDown}`)} 
+                        onClick={() => onMoveLayer(index, 'down')}
+                    >下へ</button>
                     <button onClick={() => onRemoveLayer(index)}>画層削除</button>
                     <div
                         className="timeline-row-body"
