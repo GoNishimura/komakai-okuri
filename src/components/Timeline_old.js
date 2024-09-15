@@ -52,7 +52,7 @@ const Timeline = ({
                         value={layer.frameRate} 
                         onChange={(e) => onFrameRateChange(index, e.target.value)}
                         style={{ width: '4em' }}
-                    />コマ/秒（FPS）
+                    />コマイ秒（FPS）
                     <span>{showFrameNumber(currentTime, layer.frameRate)} コマ目</span>
                     <button 
                         onMouseEnter={(e) => e.target.setAttribute('title', selectedLayerIndex === index ? shortcuts.prevFrame : `${index + 1}  + ${shortcuts.prevFrame}`)} 
