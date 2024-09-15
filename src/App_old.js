@@ -10,6 +10,23 @@ function App() {
     const [totalDuration, setTotalDuration] = useState(0);
     const [layersData, setLayersData] = useState([]);
     const [startOffset, setStartOffset] = useState(0.001);
+    const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+    const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
+    const [tickColors, setTickColors] = useState({
+        currentTimeIndicator: '#ff0000',
+        bookmark: '#00ff00'
+    });
+    const [shortcuts, setShortcuts] = useState({
+        playPause: 'Space',
+        nextFrame: 'ArrowRight',
+        prevFrame: 'ArrowLeft',
+        toggleBookmark: 's',
+        nextBookmark: '0',
+        prevBookmark: '9',
+        layerUp: 'ArrowUp',
+        layerDown: 'ArrowDown',
+        saveFrame: 'p',
+    });
 
     const videoRef = useRef(null);
 
@@ -21,7 +38,7 @@ function App() {
         setCurrentTime(time);
     }, []);
 
-    const calculateFrameTimes = (frameRate, duration, offset = startOffset) => {
+    const calculateFrameTimes = useCallback((frameRate, duration, offset = startOffset) => {
         const frameTimes = [];
         let time = offset;
 
@@ -31,46 +48,49 @@ function App() {
         }
 
         return frameTimes;
-    };
+    }, [startOffset]);
 
     const handleLoadedMetadata = (duration) => {
         setTotalDuration(duration);
-        const newlayersData = layersData.map((layer) => ({
+        const newLayersData = layersData.map((layer) => ({
             ...layer,
             frameTimes: calculateFrameTimes(layer.frameRate, duration),
             bookmarkedFrames: [],
         }));
-        setLayersData(newlayersData);
+        setLayersData(newLayersData);
         const video = document.querySelector('video');
         video.currentTime = startOffset;
     };
 
-    const handleFrameOkuri = (frameRate, direction) => {
-        const times = layersData.find(row => row.frameRate === frameRate).frameTimes;
+    const handleFrameOkuri = useCallback((layerIndex, direction) => {
+        setSelectedLayerIndex(layerIndex);
+        const times = layersData[layerIndex].frameTimes;
         let nextTime;
 
-        const nextIndex = time2FrameIndex(currentTime, frameRate, startOffset) + (direction === 'forward' ? 1 : -1);
+        const nextIndex = time2FrameIndex(currentTime, layersData[layerIndex].frameRate, startOffset) + (direction === 'forward' ? 1 : -1);
         if (nextIndex >= times.length || nextIndex < 0) return;
         nextTime = times[Math.max(nextIndex, 0)];
         const video = document.querySelector('video');
         video.currentTime = nextTime;
-    };
+    }, [currentTime, layersData, startOffset]);
 
-    const handleBookmarkToggle = (layerIndex) => {
-        const newlayersData = [...layersData];
-        const bookmarkedFrames = newlayersData[layerIndex].bookmarkedFrames;
+    const handleBookmarkToggle = useCallback((layerIndex) => {
+        setSelectedLayerIndex(layerIndex);
+        const newLayersData = [...layersData];
+        const bookmarkedFrames = newLayersData[layerIndex].bookmarkedFrames;
         const currentFrameIndex = time2FrameIndex(currentTime, layersData[layerIndex].frameRate, startOffset);
         if (currentFrameIndex < 0) return;
 
         if (bookmarkedFrames.includes(currentFrameIndex)) {
-            newlayersData[layerIndex].bookmarkedFrames = bookmarkedFrames.filter(index => index !== currentFrameIndex);
+            newLayersData[layerIndex].bookmarkedFrames = bookmarkedFrames.filter(index => index !== currentFrameIndex);
         } else {
-            newlayersData[layerIndex].bookmarkedFrames = [...bookmarkedFrames, currentFrameIndex].sort((a, b) => a - b);
+            newLayersData[layerIndex].bookmarkedFrames = [...bookmarkedFrames, currentFrameIndex].sort((a, b) => a - b);
         }
-        setLayersData(newlayersData);
-    };
+        setLayersData(newLayersData);
+    }, [currentTime, layersData, startOffset]);
 
-    const handleBookmarkFrameOkuri = (layerIndex, direction) => {
+    const handleBookmarkFrameOkuri = useCallback((layerIndex, direction) => {
+        setSelectedLayerIndex(layerIndex);
         const layer = layersData[layerIndex];
         if (layer.bookmarkedFrames.length === 0) return;
         let nextTime;
@@ -88,28 +108,26 @@ function App() {
             const video = document.querySelector('video');
             video.currentTime = nextTime;
         }
-    };
+    }, [currentTime, layersData, startOffset]);
 
-    const handleFrameRateChange = (updatedFrameRates) => {
-        const newlayersData = layersData.map((layer, index) => ({
-            ...layer,
-            frameRate: updatedFrameRates[index],
-            frameTimes: calculateFrameTimes(updatedFrameRates[index], totalDuration),
-        }));
-        setLayersData(newlayersData);
-    };
+    const handleFrameRateChange = useCallback((layerIndex, newFrameRate) => {
+        const newLayersData = [...layersData]
+        newLayersData[layerIndex].frameRate = newFrameRate
+        newLayersData[layerIndex].frameTimes = calculateFrameTimes(newFrameRate, totalDuration)
+        setLayersData(newLayersData);
+    }, [layersData, totalDuration, calculateFrameTimes]);
 
     const handleStartOffsetChange = (e) => {
         const newOffset = Math.max(0, parseFloat(e.target.value));
         setStartOffset(newOffset);
-        const newlayersData = layersData.map((layer) => ({
+        const newLayersData = layersData.map((layer) => ({
             ...layer,
             frameTimes: calculateFrameTimes(layer.frameRate, totalDuration, newOffset),
         }));
-        setLayersData(newlayersData);
+        setLayersData(newLayersData);
     };
 
-    const handleSaveFrame = () => {
+    const handleSaveFrame = useCallback(() => {
         const videoElement = videoRef.current;
         if (videoElement) {
             const canvas = document.createElement('canvas');
@@ -123,7 +141,7 @@ function App() {
             link.download = `frame_${currentTime.toFixed(3)}s.png`;
             link.click();
         }
-    };
+    }, [currentTime]);
 
     const addLayer = () => {
         if (layersData.length > 0) {
@@ -144,20 +162,73 @@ function App() {
         }
     };
 
-    const removeLayer = (index) => {
-        const newlayersData = layersData.filter((_, i) => i !== index);
-        setLayersData(newlayersData);
+    const removeLayer = (layerIndex) => {
+        const newLayersData = layersData.filter((_, i) => i !== layerIndex);
+        setLayersData(newLayersData);
+        setSelectedLayerIndex(layerIndex > 0 ? layerIndex - 1 : 0);
     };
 
-    const moveLayer = (index, direction) => {
+    const moveLayer = useCallback((layerIndex, direction) => {
         const newLayersData = [...layersData];
-        if (direction === 'up' && index > 0) {
-            [newLayersData[index], newLayersData[index - 1]] = [newLayersData[index - 1], newLayersData[index]];
-        } else if (direction === 'down' && index < newLayersData.length - 1) {
-            [newLayersData[index], newLayersData[index + 1]] = [newLayersData[index + 1], newLayersData[index]];
+        if (direction === 'up' && layerIndex > 0) {
+            setSelectedLayerIndex(layerIndex - 1);
+            [newLayersData[layerIndex], newLayersData[layerIndex - 1]] = [newLayersData[layerIndex - 1], newLayersData[layerIndex]];
+        } else if (direction === 'down' && layerIndex < newLayersData.length - 1) {
+            setSelectedLayerIndex(layerIndex + 1);
+            [newLayersData[layerIndex], newLayersData[layerIndex + 1]] = [newLayersData[layerIndex + 1], newLayersData[layerIndex]];
         }
         setLayersData(newLayersData);
+    }, [layersData]);
+
+    const toggleSettingsMenu = () => {
+        setShowSettingsMenu(!showSettingsMenu);
     };
+
+    const handleTickColorsChange = (action, newColor) => {
+        setTickColors((prevColors) => ({
+            ...prevColors,
+            [action]: newColor
+        }));
+    };
+
+    const handleShortcutChange = (action, newShortcut) => {
+        setShortcuts((prevShortcuts) => ({
+            ...prevShortcuts,
+            [action]: newShortcut,
+        }));
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === shortcuts.playPause) {
+                const video = document.querySelector('video');
+                if (video.paused) video.play();
+                else video.pause();
+            } else if (event.key === shortcuts.nextFrame) {
+                handleFrameOkuri(selectedLayerIndex, 'forward');
+            } else if (event.key === shortcuts.prevFrame) {
+                handleFrameOkuri(selectedLayerIndex, 'backward');
+            } else if (event.key === shortcuts.toggleBookmark) {
+                handleBookmarkToggle(selectedLayerIndex);
+            } else if (event.key === shortcuts.nextBookmark) {
+                handleBookmarkFrameOkuri(selectedLayerIndex, 'forward');
+            } else if (event.key === shortcuts.prevBookmark) {
+                handleBookmarkFrameOkuri(selectedLayerIndex, 'backward');
+            } else if (event.key === shortcuts.layerUp) {
+                moveLayer(selectedLayerIndex, 'up');
+            } else if (event.key === shortcuts.layerDown) {
+                moveLayer(selectedLayerIndex, 'down');
+            } else if (event.key === shortcuts.saveFrame) {
+                handleSaveFrame();
+            } else if (!isNaN(event.key)) {
+                const selectedIndex = parseInt(event.key) - 1;
+                if (0 <= selectedIndex && selectedIndex < layersData.length) setSelectedLayerIndex(selectedIndex);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [shortcuts, layersData, selectedLayerIndex, handleFrameOkuri, handleBookmarkToggle, handleBookmarkFrameOkuri, moveLayer, handleSaveFrame]);
 
     useEffect(() => {
         if (videoFile) {
@@ -209,15 +280,65 @@ function App() {
                         onBookmarkFrameOkuri={handleBookmarkFrameOkuri}
                         onRemoveLayer={removeLayer}
                         onMoveLayer={moveLayer}
+                        tickColors={tickColors}
                     />
                     <button onClick={addLayer}>画層を追加</button>
                 </div>
             )}
+            
+            <button onClick={toggleSettingsMenu}>{showSettingsMenu ? '設定を閉じる' : '設定を開く'}</button>
+            {showSettingsMenu && (
+                <div className="settings-menu">
+                    <h3>設定</h3>
+                    <label>
+                        再生位置の色:
+                        <input type="color" value={tickColors.currentTimeIndicator} onChange={(e) => handleTickColorsChange('currentTimeIndicator', e.target.value)} />
+                    </label>
+                    <label>
+                        枝折りの色:
+                        <input type="color" value={tickColors.bookmark} onChange={(e) => handleTickColorsChange('bookmark', e.target.value)} />
+                    </label>
+                    <div>
+                        <h4>ショートカットキー設定</h4>
+                        <label>
+                            再生/一時停止:
+                            <input
+                                type="text"
+                                value={shortcuts.playPause}
+                                onChange={(e) => handleShortcutChange('playPause', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            次のコマ:
+                            <input
+                                type="text"
+                                value={shortcuts.nextFrame}
+                                onChange={(e) => handleShortcutChange('nextFrame', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            前のコマ:
+                            <input
+                                type="text"
+                                value={shortcuts.prevFrame}
+                                onChange={(e) => handleShortcutChange('prevFrame', e.target.value)}
+                            />
+                        </label>
+                    </div>
+                </div>
+            )}
+
             <style jsx="true">{`
                 .player-supporter {
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 10px;
+                }
+                .settings-menu {
+                    margin-top: 20px;
+                    padding: 10px;
+                    border: 1px solid #ccc;
+                    background-color: #f9f9f9;
                 }
             `}</style>
         </div>
