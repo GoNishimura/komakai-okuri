@@ -14,7 +14,7 @@ function App() {
     const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
     const [isCrosshairVisible, setIsCrosshairVisible] = useState(false);
     const [colorPalette, setColorPalette] = useState({ 
-        selectedLayer: '#00FFFF', bookmark: '#00FF00', currentTimeIndicator: '#FF0000', crosshair: '#FF0000'
+        selectedLayer: '#00FF00', bookmark: '#00FFFF', currentTimeIndicator: '#FF0000', crosshair: '#FF0000',
     });
     const [shortcuts, setShortcuts] = useState({
         playPause: 'Space',
@@ -29,7 +29,7 @@ function App() {
         layerDown: ']',
         saveFrame: 'p',
         saveData: 'S',
-        toggleCrosshair: 'j',
+        toggleCrosshair: 'g',
     });
 
     const videoRef = useRef(null);
@@ -182,9 +182,9 @@ function App() {
                 ctx.lineTo(canvas.width, canvas.height / 2);
                 ctx.moveTo(canvas.width / 2, 0);
                 ctx.lineTo(canvas.width / 2, canvas.height);
-                ctx.closePath();
                 ctx.strokeStyle = colorPalette.crosshair;
                 ctx.stroke();
+                ctx.strokeRect(0, 0, canvas.width, canvas.height);
             }
             const dataURL = canvas.toDataURL('image/png');
             const link = document.createElement('a');

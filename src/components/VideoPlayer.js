@@ -59,10 +59,11 @@ const VideoPlayer = ({ videoFile, videoRef, isCrosshairVisible, colorPalette, on
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    width: `${videoSize.width}px`,
-                    height: `${videoSize.height}px`,
+                    width: `${videoSize.width - 2}px`,
+                    height: `${videoSize.height - 2}px`,
                     pointerEvents: 'none',
                     justifyContent: 'center',
+                    border: `solid 2px ${colorPalette.crosshair}`
                 }}>
                     {/* 縦線 */}
                     <div style={{
@@ -71,7 +72,7 @@ const VideoPlayer = ({ videoFile, videoRef, isCrosshairVisible, colorPalette, on
                         left: '50%',
                         width: '2px',
                         height: '100%',
-                        backgroundColor: colorPalette.crosshair || 'red',
+                        backgroundColor: colorPalette.crosshair,
                     }} />
                     {/* 横線 */}
                     <div style={{
@@ -80,7 +81,7 @@ const VideoPlayer = ({ videoFile, videoRef, isCrosshairVisible, colorPalette, on
                         left: 0,
                         width: '100%',
                         height: '2px',
-                        backgroundColor: colorPalette.crosshair || 'red',
+                        backgroundColor: colorPalette.crosshair,
                     }} />
                 </div>
             )}
