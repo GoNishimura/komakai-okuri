@@ -12,7 +12,10 @@ function App() {
     const [startOffset, setStartOffset] = useState(0.001);
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
     const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
-    const [colorPalette, setColorPalette] = useState({ selectedLayer: '#00FFFF', bookmark: '#00FF00', currentTimeIndicator: '#FF0000' });
+    const [isCrosshairVisible, setIsCrosshairVisible] = useState(false);
+    const [colorPalette, setColorPalette] = useState({ 
+        selectedLayer: '#00FFFF', bookmark: '#00FF00', currentTimeIndicator: '#FF0000', crosshair: '#FF0000'
+    });
     const [shortcuts, setShortcuts] = useState({
         playPause: 'Space',
         nextFrame: 'd',
@@ -25,7 +28,8 @@ function App() {
         layerUp: '[',
         layerDown: ']',
         saveFrame: 'p',
-        saveData: 'S'
+        saveData: 'S',
+        toggleCrosshair: 'j',
     });
 
     const videoRef = useRef(null);
@@ -221,6 +225,10 @@ function App() {
         }));
     };
 
+    const handleToggleCrosshair = useCallback(() => {
+        setIsCrosshairVisible(!isCrosshairVisible);
+    }, [isCrosshairVisible]);
+
     const handleShortcutChange = (action, newShortcut) => {
         setShortcuts((prevShortcuts) => ({
             ...prevShortcuts,
@@ -260,6 +268,8 @@ function App() {
                 handleSaveFrame();
             } else if (event.key === shortcuts.saveData) {
                 saveDataToFile();
+            } else if (event.key === shortcuts.toggleCrosshair) {
+                handleToggleCrosshair();
             } else if (!isNaN(event.key)) {
                 const selectedIndex = parseInt(event.key) - 1;
                 if (0 <= selectedIndex && selectedIndex < layersData.length) setSelectedLayerIndex(selectedIndex);
@@ -268,7 +278,7 @@ function App() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [shortcuts, layersData, selectedLayerIndex, handleFrameOkuri, handleBookmarkToggle, handleBookmarkFrameOkuri, moveLayer, handleSaveFrame, saveDataToFile]);
+    }, [shortcuts, layersData, selectedLayerIndex, handleFrameOkuri, handleBookmarkToggle, handleBookmarkFrameOkuri, moveLayer, handleSaveFrame, saveDataToFile, handleToggleCrosshair]);
 
     useEffect(() => {
         if (videoFile) {
@@ -290,9 +300,11 @@ function App() {
                 <div>
                     <VideoPlayer 
                         videoFile={videoFile} 
+                        videoRef={videoRef}
+                        isCrosshairVisible={isCrosshairVisible} 
+                        colorPalette={colorPalette}
                         onTimeUpdate={handleTimeUpdate} 
                         onLoadedMetadata={handleLoadedMetadata} 
-                        videoRef={videoRef} 
                     />
                     <div className="player-supporter">
                         <label>
@@ -312,6 +324,9 @@ function App() {
                             onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.saveFrame)}
                         >
                         このコマを保存</button>
+                        <button onClick={handleToggleCrosshair}>
+                            十字{isCrosshairVisible ? '非表示' : '表示'}
+                        </button>
                     </div>
                     <Timeline
                         duration={totalDuration}
