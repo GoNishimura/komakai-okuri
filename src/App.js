@@ -501,6 +501,9 @@ function App() {
             {videoFile && (
                 <ul>
                     <li>
+                        <a href='https://github.com/GoNishimura/komakai-okuri' target="_blank" rel="noreferrer">codes (GitHub)</a>
+                    </li>
+                    <li>
                         <a href='https://ko-fi.com/5246ra' target="_blank" rel="noreferrer">おひねりください</a>
                     </li>
                 </ul>
