@@ -31,8 +31,9 @@ const Timeline = ({
 
     const showFrameNumber = (time, frameRate) => {
         const fullFrameNumber = ((duration - startOffset) * frameRate + 1).toFixed(3).toString();
-        const frameNumberNow = ((time - startOffset) * frameRate + 1).toFixed(3).toString();
-        return frameNumberNow.padStart(fullFrameNumber.length, '0')
+        const frameNumberNow = ((time - startOffset) * frameRate + 1).toFixed(3); 
+        if (frameNumberNow >= 0) return frameNumberNow.toString().padStart(fullFrameNumber.length, '0');
+        else return frameNumberNow.toString();
     };
 
     return (

@@ -258,7 +258,7 @@ function App() {
                 moveLayer(selectedLayerIndex, 'down');
             } else if (event.key === shortcuts.saveFrame) {
                 handleSaveFrame();
-            } else if (event.shiftKey && event.key === shortcuts.saveData) {
+            } else if (event.key === shortcuts.saveData) {
                 saveDataToFile();
             } else if (!isNaN(event.key)) {
                 const selectedIndex = parseInt(event.key) - 1;
