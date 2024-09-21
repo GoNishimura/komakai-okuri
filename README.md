@@ -6,7 +6,7 @@ Skip frame by frame, with controllable framerates, bookmarked frames, and more..
 
 [Try me!](https://gonishimura.github.io/komakai-okuri/)
 
-![demo](https://github.com/GoNishimura/images/blob/master/komakai-demo.gif)
+![demo](images/komakai-demo.gif)
 
 ## TODO:
 - zoom in / out on timelines
