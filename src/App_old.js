@@ -186,10 +186,10 @@ function App() {
                 ctx.stroke();
                 ctx.strokeRect(0, 0, canvas.width, canvas.height);
             }
-            const dataURL = canvas.toDataURL('image/png');
+            const dataURL = canvas.toDataURL('image/jpg');
             const link = document.createElement('a');
             link.href = dataURL;
-            link.download = `frame_${currentTime.toFixed(3)}s.png`;
+            link.download = `frame_${currentTime.toFixed(3)}s.jpg`;
             link.click();
         }
     }, [currentTime, isCrosshairVisible, colorPalette]);
