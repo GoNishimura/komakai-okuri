@@ -189,10 +189,10 @@ function App() {
             const dataURL = canvas.toDataURL('image/jpg');
             const link = document.createElement('a');
             link.href = dataURL;
-            link.download = `frame_${currentTime.toFixed(3)}s.jpg`;
+            link.download = `${videoFile.name}_${currentTime.toFixed(3)}s.jpg`;
             link.click();
         }
-    }, [currentTime, isCrosshairVisible, colorPalette]);
+    }, [currentTime, isCrosshairVisible, colorPalette, videoFile]);
 
     const saveDataToFile = useCallback(() => {
         const data = {
