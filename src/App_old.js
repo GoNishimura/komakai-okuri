@@ -321,8 +321,8 @@ function App() {
             setCurrentTime(0);
             setTotalDuration(0);
             setLayersData([
-                { frameRate: 23.99, frameTimes: [], bookmarkedFrames: [] },
                 { frameRate: 24, frameTimes: [], bookmarkedFrames: [] },
+                { frameRate: 23.99, frameTimes: [], bookmarkedFrames: [] },
                 { frameRate: 30, frameTimes: [], bookmarkedFrames: [] }
             ]);
             videoRef.current.load();
