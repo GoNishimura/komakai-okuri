@@ -13,6 +13,7 @@ function App() {
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
     const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
     const [isCrosshairVisible, setIsCrosshairVisible] = useState(false);
+    const [skipTime, setSkipTime] = useState(10);
     const [colorPalette, setColorPalette] = useState({ 
         selectedLayer: '#00FF00', bookmark: '#00FFFF', currentTimeIndicator: '#FF0000', crosshair: '#FF0000',
     });
@@ -30,6 +31,11 @@ function App() {
         saveFrame: 'p',
         saveData: 'S',
         toggleCrosshair: 'g',
+        halfSpeed: 'j',
+        normalSpeed: 'k',
+        twiceSpeed: 'l',
+        skipForward: 't',
+        skipBackward: 'r',
     });
 
     const videoRef = useRef(null);
@@ -248,7 +254,17 @@ function App() {
 
     const handleSelectedLayerChanged = (layerIndex) => {
         setSelectedLayerIndex(layerIndex);
-    }
+    };
+
+    const handleSpeedChange = useCallback ((speedRate) => {
+        const video = document.querySelector('video');
+        video.playbackRate = speedRate;
+    }, []);
+
+    const handleSkip = useCallback ((direction) => {
+        const video = document.querySelector('video');
+        video.currentTime = currentTime + (direction === 'forward' ? skipTime : -skipTime);
+    }, [currentTime, skipTime]);
 
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -280,6 +296,16 @@ function App() {
                 saveDataToFile();
             } else if (event.key === shortcuts.toggleCrosshair) {
                 handleToggleCrosshair();
+            } else if (event.key === shortcuts.halfSpeed) {
+                handleSpeedChange(0.5);
+            } else if (event.key === shortcuts.normalSpeed) {
+                handleSpeedChange(1);
+            } else if (event.key === shortcuts.twiceSpeed) {
+                handleSpeedChange(2);
+            } else if (event.key === shortcuts.skipForward) {
+                handleSkip('forward');
+            } else if (event.key === shortcuts.skipBackward) {
+                handleSkip('backward');
             } else if (!isNaN(event.key)) {
                 const selectedIndex = parseInt(event.key) - 1;
                 if (0 <= selectedIndex && selectedIndex < layersData.length) setSelectedLayerIndex(selectedIndex);
@@ -288,7 +314,7 @@ function App() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [shortcuts, layersData, selectedLayerIndex, handleFrameOkuri, handleBookmarkToggle, handleBookmarkFrameOkuri, moveLayer, handleSaveFrame, saveDataToFile, handleToggleCrosshair]);
+    }, [shortcuts, layersData, selectedLayerIndex, handleFrameOkuri, handleBookmarkToggle, handleBookmarkFrameOkuri, moveLayer, handleSaveFrame, saveDataToFile, handleToggleCrosshair, handleSpeedChange, handleSkip]);
 
     useEffect(() => {
         if (videoFile) {
@@ -332,11 +358,48 @@ function App() {
                         <button 
                             onClick={handleSaveFrame}
                             onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.saveFrame)}
-                        >
-                        このコマを保存</button>
-                        <button onClick={handleToggleCrosshair}>
-                            十字{isCrosshairVisible ? '非表示' : '表示'}
-                        </button>
+                            >
+                            このコマを保存</button>
+                        <button 
+                            onClick={handleToggleCrosshair}
+                            onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.toggleCrosshair)}
+                            >
+                            十字{isCrosshairVisible ? '非表示' : '表示'}</button>
+                        <div>
+                            <button 
+                                onClick={() => handleSpeedChange(0.5)}
+                                onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.halfSpeed)}
+                                >
+                                半速</button>
+                            <button 
+                                onClick={() => handleSpeedChange(1)}
+                                onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.normalSpeed)}
+                                >
+                                等速</button>
+                            <button 
+                                onClick={() => handleSpeedChange(2)}
+                                onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.twiceSpeed)}
+                                >
+                                倍速</button>
+                        </div>
+                        <div>
+                            <input
+                                type="number"
+                                value={skipTime}
+                                onChange={(e) => setSkipTime(e.target.value)}
+                                style={{ width: '4em' }}
+                            />秒
+                            <button 
+                                onClick={() => handleSkip('backward')}
+                                onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.skipBackward)}
+                                >
+                                後へ</button>
+                            <button 
+                                onClick={() => handleSkip('forward')}
+                                onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.halfSpeed)}
+                                >
+                                先へ</button>
+                        </div>
                     </div>
                     <Timeline
                         duration={totalDuration}
@@ -387,6 +450,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.playPause}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('playPause', e.target.value)}
                             />
                         </label>
@@ -395,6 +459,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.nextFrame}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('nextFrame', e.target.value)}
                             />
                         </label>
@@ -403,6 +468,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.prevFrame}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('prevFrame', e.target.value)}
                             />
                         </label>
@@ -411,6 +477,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.toggleBookmark}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('toggleBookmark', e.target.value)}
                             />
                         </label>
@@ -419,6 +486,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.nextBookmark}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('nextBookmark', e.target.value)}
                             />
                         </label>
@@ -427,6 +495,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.prevBookmark}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('prevBookmark', e.target.value)}
                             />
                         </label>
@@ -435,6 +504,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.selectUp}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('selectUp', e.target.value)}
                             />
                         </label>
@@ -443,6 +513,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.selectDown}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('selectDown', e.target.value)}
                             />
                         </label>
@@ -451,6 +522,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.layerUp}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('layerUp', e.target.value)}
                             />
                         </label>
@@ -459,6 +531,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.layerDown}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('layerDown', e.target.value)}
                             />
                         </label>
@@ -467,6 +540,7 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.saveFrame}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('saveFrame', e.target.value)}
                             />
                         </label>
@@ -475,7 +549,53 @@ function App() {
                             <input
                                 type="text"
                                 value={shortcuts.saveData}
+                                style={{ width: '4em' }}
                                 onChange={(e) => handleShortcutChange('saveData', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            半速:
+                            <input
+                                type="text"
+                                value={shortcuts.halfSpeed}
+                                style={{ width: '4em' }}
+                                onChange={(e) => handleShortcutChange('halfSpeed', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            等速:
+                            <input
+                                type="text"
+                                value={shortcuts.normalSpeed}
+                                style={{ width: '4em' }}
+                                onChange={(e) => handleShortcutChange('normalSpeed', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            倍速:
+                            <input
+                                type="text"
+                                value={shortcuts.halfSpeed}
+                                style={{ width: '4em' }}
+                                onChange={(e) => handleShortcutChange('twiceSpeed', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            N秒前へ:
+                            <input
+                                type="text"
+                                value={shortcuts.skipBackward}
+                                style={{ width: '4em' }}
+                                onChange={(e) => handleShortcutChange('skipBackward', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            N秒先へ:
+                            <input
+                                type="text"
+                                value={shortcuts.skipForward}
+                                style={{ width: '4em' }}
+                                onChange={(e) => handleShortcutChange('skipForward', e.target.value)}
                             />
                         </label>
                     </div>

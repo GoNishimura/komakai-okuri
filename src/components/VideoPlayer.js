@@ -26,8 +26,8 @@ const VideoPlayer = ({ videoFile, videoRef, isCrosshairVisible, colorPalette, on
         const videoElement = videoRef.current;
 
         if (videoElement) {
-            videoElement.muted = true;
-            videoElement.loop = true;
+            // videoElement.muted = true;
+            // videoElement.loop = true;
 
             const handleTimeUpdate = () => {
                 onTimeUpdate(videoElement.currentTime);
