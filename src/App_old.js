@@ -624,7 +624,7 @@ function App() {
                         <a href='https://github.com/GoNishimura/komakai-okuri' target="_blank" rel="noreferrer">codes (GitHub)</a>
                     </li>
                     <li>
-                        <a href='https://ko-fi.com/5246ra' target="_blank" rel="noreferrer">おひねりください</a>
+                        <a href='https://ko-fi.com/5246ra' target="_blank" rel="noreferrer">広告に屈さずに済むよう、おひねりください</a>
                     </li>
                 </ul>
             )}
