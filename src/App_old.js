@@ -192,10 +192,13 @@ function App() {
                 ctx.stroke();
                 ctx.strokeRect(0, 0, canvas.width, canvas.height);
             }
-            const dataURL = canvas.toDataURL('image/jpg');
+            // どうしてpngじゃなくてjpgにこだわってたんだっけ
+            // でもこれで画質が上がるわけでもない
+            const fileType = 'png'
+            const dataURL = canvas.toDataURL(`image/${fileType}`);
             const link = document.createElement('a');
             link.href = dataURL;
-            link.download = `${videoFile.name}_${currentTime.toFixed(3)}s.jpg`;
+            link.download = `${videoFile.name}_${currentTime.toFixed(3)}s.${fileType}`;
             link.click();
         }
     }, [currentTime, isCrosshairVisible, colorPalette, videoFile]);
