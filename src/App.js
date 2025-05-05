@@ -210,12 +210,11 @@ function App() {
             colorPalette,
             shortcuts,
         };
-        const fileName = videoFile.name + "_settings.json";
         const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = fileName;
+        a.download = `${videoFile.name}_settings.json`;
         a.click();
     }, [colorPalette, layersData, shortcuts, startOffset, videoFile]);
 
