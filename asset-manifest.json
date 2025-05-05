@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/komakai-okuri/static/css/main.e6c13ad2.css",
-    "main.js": "/komakai-okuri/static/js/main.8c954deb.js",
+    "main.js": "/komakai-okuri/static/js/main.5bb24288.js",
     "static/js/453.cb8469c6.chunk.js": "/komakai-okuri/static/js/453.cb8469c6.chunk.js",
     "index.html": "/komakai-okuri/index.html",
     "main.e6c13ad2.css.map": "/komakai-okuri/static/css/main.e6c13ad2.css.map",
-    "main.8c954deb.js.map": "/komakai-okuri/static/js/main.8c954deb.js.map",
+    "main.5bb24288.js.map": "/komakai-okuri/static/js/main.5bb24288.js.map",
     "453.cb8469c6.chunk.js.map": "/komakai-okuri/static/js/453.cb8469c6.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.8c954deb.js"
+    "static/js/main.5bb24288.js"
   ]
 }
