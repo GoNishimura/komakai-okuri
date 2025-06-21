@@ -13,6 +13,7 @@ function App() {
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
     const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
     const [isCrosshairVisible, setIsCrosshairVisible] = useState(false);
+    const [isLoopEnabled, setIsLoopEnabled] = useState(false);
     const [skipTime, setSkipTime] = useState(10);
     const [colorPalette, setColorPalette] = useState({ 
         selectedLayer: '#00FF00', bookmark: '#00FFFF', currentTimeIndicator: '#FF0000', crosshair: '#FF0000',
@@ -247,6 +248,10 @@ function App() {
         setIsCrosshairVisible(!isCrosshairVisible);
     }, [isCrosshairVisible]);
 
+    const handleToggleLoop = useCallback(() => {
+        setIsLoopEnabled(!isLoopEnabled);
+    }, [isLoopEnabled]);
+
     const handleShortcutChange = (action, newShortcut) => {
         setShortcuts((prevShortcuts) => ({
             ...prevShortcuts,
@@ -340,6 +345,7 @@ function App() {
                         videoFile={videoFile} 
                         videoRef={videoRef}
                         isCrosshairVisible={isCrosshairVisible} 
+                        isLoopEnabled={isLoopEnabled}
                         colorPalette={colorPalette}
                         onTimeUpdate={handleTimeUpdate} 
                         onLoadedMetadata={handleLoadedMetadata} 
@@ -367,6 +373,10 @@ function App() {
                             onMouseEnter={(e) => e.target.setAttribute('title', shortcuts.toggleCrosshair)}
                             >
                             十字{isCrosshairVisible ? '非表示' : '表示'}</button>
+                        <button 
+                            onClick={handleToggleLoop}
+                            >
+                            ループ{isLoopEnabled ? '中' : 'しない'}</button>
                         <div>
                             <button 
                                 onClick={() => handleSpeedChange(0.5)}

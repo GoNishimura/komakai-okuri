@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-const VideoPlayer = ({ videoFile, videoRef, isCrosshairVisible, colorPalette, onTimeUpdate, onLoadedMetadata }) => {
+const VideoPlayer = ({ videoFile, videoRef, isCrosshairVisible, isLoopEnabled, colorPalette, onTimeUpdate, onLoadedMetadata }) => {
     const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
     const containerRef = useRef(null);
 
@@ -27,7 +27,7 @@ const VideoPlayer = ({ videoFile, videoRef, isCrosshairVisible, colorPalette, on
 
         if (videoElement) {
             // videoElement.muted = true;
-            // videoElement.loop = true;
+            videoElement.loop = isLoopEnabled;
 
             const handleTimeUpdate = () => {
                 onTimeUpdate(videoElement.currentTime);
@@ -45,7 +45,7 @@ const VideoPlayer = ({ videoFile, videoRef, isCrosshairVisible, colorPalette, on
                 videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
             };
         }
-    }, [videoFile, onTimeUpdate, onLoadedMetadata, videoRef]);
+    }, [videoFile, onTimeUpdate, onLoadedMetadata, videoRef, isLoopEnabled]);
 
     return (
         <div className="video-player-container" ref={containerRef}>
